@@ -62,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
         // Ask for activity recognition permission
         if (runningOorLater) {
             getCameraPermission();
+            getLocationPermission();
         }
     }
 
@@ -93,15 +94,55 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void getLocationPermission(){
+        if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED)
+        {
+            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.ACCESS_FINE_LOCATION},
+                    REQUEST_CODE_PERMISSIONS);
+        }
+        else
+        {
+            return;
+        }
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                getCameraPermission();
-            } else {
-                Toast.makeText(this, "Camera permission denied", Toast.LENGTH_SHORT).show();
+            boolean cameraGranted = false;
+            boolean locationGranted = false;
+
+            // Check each permission result
+            for (int i = 0; i < permissions.length; i++) {
+                if (permissions[i].equals(Manifest.permission.CAMERA)) {
+                    if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                        cameraGranted = true;
+                    } else {
+                        Toast.makeText(this, "Camera permission denied", Toast.LENGTH_SHORT).show();
+                    }
+                } else if (permissions[i].equals(Manifest.permission.ACCESS_FINE_LOCATION)) {
+                    if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                        locationGranted = true;
+                    } else {
+                        Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+
+            // Handle granted permissions
+            if (cameraGranted) {
+                Toast.makeText(this, "Camera permission granted", Toast.LENGTH_SHORT).show();
+                // You can call any method or notify fragments if necessary
+            }
+
+            if (locationGranted) {
+                Toast.makeText(this, "Location permission granted", Toast.LENGTH_SHORT).show();
+                // You can call any method or notify fragments if necessary
             }
         }
     }
+
 }
