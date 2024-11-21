@@ -4,11 +4,11 @@ public class Vertex {
 
     private String name;
     private VertexType type;
-    private int longitude;
-    private int latitude;
+    private double longitude;
+    private double latitude;
     private int floor;
 
-    public Vertex(String name, VertexType type, int longitude, int latitude, int floor) {
+    public Vertex(String name, VertexType type, double longitude, double latitude, int floor) {
         this.name = name;
         this.type = type;
         this.longitude = longitude;
@@ -24,11 +24,11 @@ public class Vertex {
         return type;
     }
 
-    public int getLongitude() {
+    public double getLongitude() {
         return longitude;
     }
 
-    public int getLatitude() {
+    public double getLatitude() {
         return latitude;
     }
 
@@ -55,6 +55,7 @@ public class Vertex {
     public void setFloor(int floor) {
         this.floor = floor;
     }
+
 
     @Override
     public boolean equals(Object obj) {

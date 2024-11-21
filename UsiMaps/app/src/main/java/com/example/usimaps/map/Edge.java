@@ -1,14 +1,16 @@
 package com.example.usimaps.map;
 
 public class Edge {
-    private Vertex source;
-    private Vertex destination;
-    private int weight;
+    private final Vertex source;
+    private final Vertex destination;
+    private final double weight;
+    private String name = "";
 
-    public Edge(Vertex source, Vertex destination, int weight) {
+    public Edge(Vertex source, Vertex destination, double weight, String name) {
         this.source = source;
         this.destination = destination;
         this.weight = weight;
+        this.name = name;
     }
 
     public Vertex getSource() {
@@ -19,7 +21,11 @@ public class Edge {
         return destination;
     }
 
-    public int getWeight() {
+    public double getWeight() {
         return weight;
+    }
+
+    public String getName() {
+        return name;
     }
 }
