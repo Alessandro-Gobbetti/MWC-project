@@ -390,10 +390,10 @@ public class Graph {
         graph.addVertex(C1_CorridorEnd);
         graph.addEdge(D1_CorridorEnd, C1_CorridorEnd, computeDistance(D1_CorridorEnd, C1_CorridorEnd), "C1 Corridor");
 
-        Vertex D1_03 = new Vertex("D1:03", VertexType.ROOM, 46.01239944086005, 8.961342661886274, 1);
+        Vertex D1_03 = new Vertex("C1:03", VertexType.ROOM, 46.01239944086005, 8.961342661886274, 1);
         graph.addVertex(D1_03);
         graph.connectVertexToEdgeByName(D1_03, "C1 Corridor");
-        Vertex D1_04 = new Vertex("D1:04", VertexType.ROOM, 46.01239944086005, 8.961342661886274, 1);
+        Vertex D1_04 = new Vertex("C1:04", VertexType.ROOM, 46.01239944086005, 8.961342661886274, 1);
         graph.addVertex(D1_04);
 
         return graph;
