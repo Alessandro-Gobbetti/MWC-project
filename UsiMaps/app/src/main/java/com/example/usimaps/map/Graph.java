@@ -1,5 +1,7 @@
 package com.example.usimaps.map;
 
+import androidx.annotation.NonNull;
+
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -179,9 +181,11 @@ public class Graph {
      */
     public void print() {
         for (Vertex v : map.keySet()) {
-            System.out.println("Vertex: " + v.getName());
-            for (Edge e : Objects.requireNonNull(map.get(v))) {
-                System.out.println("\t-> " + e.getDestination().getName() + "\tWeight: " + e.getWeight());
+            if (v.getType() != VertexType.CONNECTION) {
+                System.out.println(v.getName());
+                for (Edge e : Objects.requireNonNull(map.get(v))) {
+                    System.out.println("\t-> " + e.getDestination().getName() + "\tWeight: " + e.getWeight());
+                }
             }
         }
     }
@@ -194,7 +198,7 @@ public class Graph {
      * @param v: the vertex
      * @param e: the edge
      */
-    public void connectVertexToEdge(Vertex v, Edge e) {
+    public void connectVertexToEdge(Vertex v, @NonNull Edge e) {
         // assert e in map
         assert map.containsKey(e.getSource());
 
@@ -216,7 +220,7 @@ public class Graph {
         double y = y1 + u * (y2 - y1);
 
         // create new connection vertex lying on the edge
-        Vertex connectionVertex = new Vertex( v.getName() + " (Connection)", VertexType.CONNECTION, x, y, v.getFloor());
+        Vertex connectionVertex = new Vertex(e.getName().toUpperCase() + "-" + v.getName(), VertexType.CONNECTION, x, y, v.getFloor());
         addVertex(connectionVertex);
 
         // compute the new weights
@@ -305,11 +309,11 @@ public class Graph {
         double x3 = v3.getLongitude();
         double y3 = v3.getLatitude();
 
-        double a = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-        double b = Math.sqrt(Math.pow(x3 - x2, 2) + Math.pow(y3 - y2, 2));
-        double c = Math.sqrt(Math.pow(x3 - x1, 2) + Math.pow(y3 - y1, 2));
+        double a = Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2);
+        double b = Math.pow(x2 - x3, 2) + Math.pow(y2 - y3, 2);
+        double c = Math.pow(x3 - x1, 2) + Math.pow(y3 - y1, 2);
 
-        return Math.acos((Math.pow(a, 2) + Math.pow(b, 2) - Math.pow(c, 2)) / (2 * a * b));
+        return Math.acos((a + b - c) / Math.sqrt(4 * a * b));
     }
 
     public double computeDistance(Vertex v1, Vertex v2) {
@@ -335,6 +339,33 @@ public class Graph {
     }
 
     /**
+     * Simplifies a path by removing vertices with an angle smaller than the threshold angle
+     * @param path the path to simplify
+     * @param threshold_angle_degrees the threshold angle in degrees +- 180 degrees
+     * @return the simplified path
+     */
+    public List<Vertex> simplifyPath(List<Vertex> path, double threshold_angle_degrees) {
+        List<Vertex> simplifiedPath = new ArrayList<>();
+        if (path.size() < 3) {
+            return path;
+        }
+        simplifiedPath.add(path.get(0));
+        for (int i = 1; i < path.size() - 1; i++) {
+            Vertex v1 = path.get(i - 1);
+            Vertex v2 = path.get(i);
+            Vertex v3 = path.get(i + 1);
+            double angle = Math.toDegrees(getAngle(v1, v2, v3));
+            // check if the angle is in a range 180 +- threshold_angle_degrees
+            if (Math.abs(angle - 180) >= threshold_angle_degrees) {
+                simplifiedPath.add(v2);
+            }
+        }
+        simplifiedPath.add(path.get(path.size() - 1));
+        return simplifiedPath;
+    }
+
+
+    /**
      * Generates a map of the USI campus
      * @return the graph representing the USI campus
      */
@@ -347,34 +378,28 @@ public class Graph {
         graph.addVertex(D0_CorridorStart);
         graph.addEdge(D0_CorridorStart, D0_CorridorEnd, computeDistance(D0_CorridorStart, D0_CorridorEnd), "D Corridor");
 
-        Vertex D_Door = new Vertex("Door Sector D", VertexType.DOOR, 46.011951, 8.961339, 0);
-        Vertex D_Door2 = new Vertex("Door Sector D", VertexType.DOOR, 46.011815, 8.961308, 0);
+        Vertex D_Door = new Vertex("Door1 Sector D", VertexType.DOOR, 46.011951, 8.961339, 0);
+        Vertex D_Door2 = new Vertex("Door2 Sector D", VertexType.DOOR, 46.011815, 8.961308, 0);
         Vertex Stairs_base = new Vertex("Stairs D Base", VertexType.CONNECTION, 46.011997, 8.961422, 0);
-        Vertex Stairs_top = new Vertex("Stairs D Top", VertexType.CONNECTION, 46.012091, 8.961406, 1);
+        Vertex Stairs_top = new Vertex("Stairs D Top", VertexType.CONNECTION, 46.012081,8.961436, 1);
 
         Vertex D002 = new Vertex("D0:02", VertexType.ROOM, 46.012090, 8.961486, 0);
         Vertex D004 = new Vertex("D0:04", VertexType.ROOM, 46.011884, 8.961442, 0);
 
-        graph.addVertex(D_Door);
-        graph.addVertex(D_Door2);
-        graph.addVertex(Stairs_base);
-        graph.addVertex(Stairs_top);
-        graph.addEdge(Stairs_top, Stairs_base, computeDistance(Stairs_top, Stairs_base), "Stairs D");
-
-        graph.addVertex(D002);
-        graph.addVertex(D004);
-
         graph.connectVertexToEdgeByName(D_Door, "D Corridor");
         graph.connectVertexToEdgeByName(D_Door2, "D Corridor");
-        graph.connectVertexToEdgeByName(Stairs_base, "D Corridor");
         graph.connectVertexToEdgeByName(D002, "D Corridor");
         graph.connectVertexToEdgeByName(D004, "D Corridor");
+        graph.connectVertexToEdgeByName(Stairs_base, "D Corridor");
+
+        graph.addVertex(Stairs_top);
+        graph.addEdge(Stairs_top, Stairs_base, computeDistance(Stairs_top, Stairs_base), "Stairs D");
 
 
         // First floor
         // Corridor D1
-        Vertex D1_CorridorEnd = new Vertex("Corridor D0", VertexType.CONNECTION, 46.012324, 8.961444, 1);
-        Vertex D1_CorridorStart = new Vertex("Corridor D0", VertexType.CONNECTION, 46.011607, 8.961346, 1);
+        Vertex D1_CorridorEnd = new Vertex("Corridor D1", VertexType.CONNECTION, 46.012324, 8.961444, 1);
+        Vertex D1_CorridorStart = new Vertex("Corridor D1", VertexType.CONNECTION, 46.011607, 8.961346, 1);
         graph.addVertex(D1_CorridorEnd);
         graph.addVertex(D1_CorridorStart);
         graph.addEdge(D1_CorridorStart, D1_CorridorEnd, computeDistance(D1_CorridorStart, D1_CorridorEnd), "D1 Corridor");
@@ -382,7 +407,6 @@ public class Graph {
         graph.connectVertexToEdgeByName(Stairs_top, "D1 Corridor");
 
         Vertex D115 = new Vertex("D1:15", VertexType.ROOM, 46.011589, 8.961352, 1);
-        graph.addVertex(D115);
         graph.connectVertexToEdgeByName(D115, "D1 Corridor");
 
         // corridor C1
@@ -390,11 +414,10 @@ public class Graph {
         graph.addVertex(C1_CorridorEnd);
         graph.addEdge(D1_CorridorEnd, C1_CorridorEnd, computeDistance(D1_CorridorEnd, C1_CorridorEnd), "C1 Corridor");
 
-        Vertex D1_03 = new Vertex("C1:03", VertexType.ROOM, 46.01239944086005, 8.961342661886274, 1);
-        graph.addVertex(D1_03);
-        graph.connectVertexToEdgeByName(D1_03, "C1 Corridor");
-        Vertex D1_04 = new Vertex("C1:04", VertexType.ROOM, 46.01239944086005, 8.961342661886274, 1);
-        graph.addVertex(D1_04);
+        Vertex C1_03 = new Vertex("C1:03", VertexType.ROOM, 46.01239944086005, 8.961342661886274, 1);
+        graph.connectVertexToEdgeByName(C1_03, "C1 Corridor");
+        Vertex C1_04 = new Vertex("C1:04", VertexType.ROOM, 46.01239944086005, 8.961342661886274, 1);
+        graph.connectVertexToEdgeByName(C1_04, "C1 Corridor");
 
         return graph;
     }

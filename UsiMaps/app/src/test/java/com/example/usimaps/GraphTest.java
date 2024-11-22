@@ -1,5 +1,6 @@
 package com.example.usimaps;
 
+import com.example.usimaps.map.Edge;
 import com.example.usimaps.map.Graph;
 import com.example.usimaps.map.Vertex;
 import com.example.usimaps.map.VertexType;
@@ -145,9 +146,29 @@ public class GraphTest {
         System.out.println("--------------------");
 
 
-        System.out.println("Shortest path from " + start + " to " + end + " with cost " + weight + ":");
+        System.out.println("FULL Shortest path from " + start + " to " + end + " with cost " + weight + ":");
         for (Vertex vertex : path) {
-            System.out.println(vertex.getName());
+            System.out.println(vertex.getName() + "\t(" + vertex.getLongitude() + "," + vertex.getLatitude() + ")");
         }
+
+        System.out.println("--------------------");
+        for (Vertex vertex : path) {
+            System.out.println(vertex.getLongitude() + "," + vertex.getLatitude());
+        }
+        System.out.println("--------------------");
+
+        // simplify the path
+        List<Vertex> simplifiedPath = graph.simplifyPath(path, 10);
+        System.out.println("SIMPLIFIED Shortest path from " + start + " to " + end + ", removed " + (path.size() - simplifiedPath.size()) + " vertices:");
+        for (Vertex vertex : simplifiedPath) {
+            System.out.println(vertex.getName() + "\t(" + vertex.getLongitude() + "," + vertex.getLatitude() + ")");
+        }
+
+        System.out.println("--------------------");
+        for (Vertex vertex : simplifiedPath) {
+            System.out.println(vertex.getLongitude() + "," + vertex.getLatitude());
+        }
+
+
     }
 }
