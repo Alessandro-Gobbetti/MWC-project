@@ -57,5 +57,5 @@ dependencies {
     implementation ("androidx.camera:camera-view:1.4.0")
     implementation ("androidx.camera:camera-extensions:1.4.0")
     implementation ("com.google.android.gms:play-services-location:21.3.0")
-
+    implementation ("com.google.mlkit:barcode-scanning:17.0.1")
 }
