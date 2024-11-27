@@ -36,7 +36,7 @@ public class Graph {
     public List<String> getSearchableNames() {
         List<String> roomNames = new ArrayList<>();
         for (Vertex v : map.keySet()) {
-            if (v.getType() != VertexType.CONNECTION) {
+            if (v.getType() != VertexType.CONNECTION && v.getType() != VertexType.STAIR && v.getType() != VertexType.ELEVATOR) {
                 roomNames.add(v.getName());
             }
         }
@@ -364,6 +364,81 @@ public class Graph {
         return simplifiedPath;
     }
 
+    /**
+     * Returns the instructions to follow the path
+     * Such as: "Follow the corridor", "Turn left", "Take the stairs on the right up to the first floor"
+     * @param path the path
+     * @return the instructions
+     */
+    public Pair<List<Vertex>,List<String>> toSimpleInstructions(List<Vertex> path) {
+        List<String> instructions = new ArrayList<>();
+        List<Vertex> simplifiedPath = new ArrayList<>();
+        path = simplifyPath(path, 20);
+
+        if (path.size() == 1) {
+            instructions.add("You are already at " + path.get(0));
+            return new Pair<>(path, instructions);
+        }
+        if (path.size() == 2) {
+            instructions.add(path.get(1) + " is right next to you");
+            return new Pair<>(path, instructions);
+        }
+
+        // add start instruction
+        instructions.add("Start at " + path.get(0).getName());
+
+        int angle_threshold = 20;
+
+        for (int i = 1; i < path.size() - 1; i++) {
+            Vertex v1 = path.get(i - 1);
+            Vertex v2 = path.get(i);
+            Vertex v3 = path.get(i + 1);
+            double angle = Math.toDegrees(getAngle(v1, v2, v3));
+            // check if stairs
+
+            if (v2.getName().contains("Stairs")) {
+                boolean up = v2.getFloor() < v3.getFloor();
+
+                // skip all next stairs
+                while (i < path.size() - 1 && path.get(i).getName().contains("Stairs")) {
+                    i++;
+                }
+
+                String upString = up ? "up" : "down";
+                // compute final floor
+                String floor = ordinal(v2.getFloor());
+                instructions.add("Take the stairs on the " + (angle < 90 ? "right" : "left") + " " + (up ? "up" : "down") + " to the " + floor + " floor");
+            } else if (angle < 180-angle_threshold && angle > 0) {
+                instructions.add("Turn right");
+            } else if ((angle > 180+angle_threshold && angle < 360-angle_threshold) || angle < 0) {
+                instructions.add("Turn left");
+            } else {
+                instructions.add("Continue straight");
+            }
+            simplifiedPath.add(v2);
+        }
+        instructions.add("Destination: " + path.get(path.size() - 1).getName());
+        simplifiedPath.add(path.get(path.size() - 1));
+        return new Pair<>(simplifiedPath, instructions);
+    }
+
+    private String ordinal(int i) {
+        if (i==0) {
+            return "Ground";
+        }
+        int mod100 = i % 100;
+        int mod10 = i % 10;
+        if(mod10 == 1 && mod100 != 11) {
+            return i + "st";
+        } else if(mod10 == 2 && mod100 != 12) {
+            return i + "nd";
+        } else if(mod10 == 3 && mod100 != 13) {
+            return i + "rd";
+        } else {
+            return i + "th";
+        }
+    }
+
 
     /**
      * Generates a map of the USI campus
@@ -380,8 +455,8 @@ public class Graph {
 
         Vertex D_Door = new Vertex("Door1 Sector D", VertexType.DOOR, 46.011951, 8.961339, 0);
         Vertex D_Door2 = new Vertex("Door2 Sector D", VertexType.DOOR, 46.011815, 8.961308, 0);
-        Vertex Stairs_base = new Vertex("Stairs D Base", VertexType.CONNECTION, 46.011997, 8.961422, 0);
-        Vertex Stairs_top = new Vertex("Stairs D Top", VertexType.CONNECTION, 46.012081,8.961436, 1);
+        Vertex Stairs_base = new Vertex("Stairs D Base", VertexType.STAIR, 46.011997, 8.961422, 0);
+        Vertex Stairs_top = new Vertex("Stairs D Top", VertexType.STAIR, 46.012081,8.961436, 1);
 
         Vertex D002 = new Vertex("D0:02", VertexType.ROOM, 46.012090, 8.961486, 0);
         Vertex D004 = new Vertex("D0:04", VertexType.ROOM, 46.011884, 8.961442, 0);
