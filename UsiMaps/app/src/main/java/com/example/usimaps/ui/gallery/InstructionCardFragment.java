@@ -1,5 +1,7 @@
 package com.example.usimaps.ui.gallery;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -12,14 +14,20 @@ import android.view.ViewGroup;
 import com.example.usimaps.R;
 import com.example.usimaps.databinding.FragmentInstructionCardBinding;
 
+import java.io.File;
+
 
 public class InstructionCardFragment extends Fragment {
 
     private FragmentInstructionCardBinding binding;
     private final String instruction;
 
-    public InstructionCardFragment(String instruction) {
+    // image paths array
+    private final String imgPath;
+
+    public InstructionCardFragment(String instruction, String imgPath) {
         this.instruction = instruction;
+        this.imgPath = imgPath;
     }
 
 
@@ -36,7 +44,18 @@ public class InstructionCardFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         binding.instructionText.setText(instruction);
+
+        // load image from file path
+        File imgFile = new File(imgPath);
+        if(imgFile.exists()){
+            Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+            binding.instructionImage.setImageBitmap(myBitmap);
+        } else {
+            // remove image
+            binding.instructionImage.setVisibility(View.GONE);
+        }
     }
+
 
     @Override
     public void onDestroyView() {

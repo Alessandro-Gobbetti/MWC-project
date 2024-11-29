@@ -7,6 +7,7 @@ public class Vertex {
     private double longitude;
     private double latitude;
     private int floor;
+    private String imagepath;
 
     public Vertex(String name, VertexType type, double longitude, double latitude, int floor) {
         this.name = name;
@@ -14,6 +15,12 @@ public class Vertex {
         this.longitude = longitude;
         this.latitude = latitude;
         this.floor = floor;
+
+        // image paths array
+        String[] images = new String[] {"/storage/emulated/0/Android/data/com.example.usimaps/files/Pictures/IMG_1732881224591.jpg", "/storage/emulated/0/Android/data/com.example.usimaps/files/Pictures/IMG_1732881794105.jpg","/storage/emulated/0/Android/data/com.example.usimaps/files/Pictures/IMG_1732881831511.jpg"};
+        int random = (int) (Math.random() * images.length);
+        this.imagepath = images[random];
+
     }
 
     public String getName() {
@@ -34,6 +41,10 @@ public class Vertex {
 
     public int getFloor() {
         return floor;
+    }
+
+    public String getImagePath() {
+        return imagepath;
     }
 
     public void setName(String name) {

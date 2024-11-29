@@ -386,6 +386,7 @@ public class Graph {
 
         // add start instruction
         instructions.add("Start at " + path.get(0).getName());
+        simplifiedPath.add(path.get(0));
 
         int angle_threshold = 20;
 
@@ -396,17 +397,17 @@ public class Graph {
             double angle = Math.toDegrees(getAngle(v1, v2, v3));
             // check if stairs
 
-            if (v2.getName().contains("Stairs")) {
-                boolean up = v2.getFloor() < v3.getFloor();
+            if (v2.getType() == VertexType.STAIR || v3.getType() == VertexType.STAIR) {
 
                 // skip all next stairs
-                while (i < path.size() - 1 && path.get(i).getName().contains("Stairs")) {
+                while (i < path.size() - 1 && path.get(i).getType() == VertexType.STAIR) {
                     i++;
                 }
 
-                String upString = up ? "up" : "down";
+                int finalFloor = path.get(i).getFloor();
+                boolean up = v2.getFloor() < finalFloor;
                 // compute final floor
-                String floor = ordinal(v2.getFloor());
+                String floor = ordinal(finalFloor);
                 instructions.add("Take the stairs on the " + (angle < 90 ? "right" : "left") + " " + (up ? "up" : "down") + " to the " + floor + " floor");
             } else if (angle < 180-angle_threshold && angle > 0) {
                 instructions.add("Turn right");
@@ -419,6 +420,14 @@ public class Graph {
         }
         instructions.add("Destination: " + path.get(path.size() - 1).getName());
         simplifiedPath.add(path.get(path.size() - 1));
+
+        System.out.println("########### LENGTH: " + simplifiedPath.size() + " -> " + instructions.size());
+
+        // print all coordinates
+        System.out.println("||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
+        for (Vertex v : simplifiedPath) {
+            System.out.println(v.getName() + " " + v.getLongitude() + " " + v.getLatitude());
+        }
         return new Pair<>(simplifiedPath, instructions);
     }
 
