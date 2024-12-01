@@ -6,13 +6,101 @@
     android:layout_height="match_parent"
     tools:context=".ui.gallery.GalleryFragment">
 
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:id="@+id/search"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/search_bars"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- SearchBar for "From" location -->
+            <com.google.android.material.search.SearchBar
+                android:id="@+id/from_search_bar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:hint="From"
+                app:menu="@menu/from_search_bar_menu"
+                app:navigationIcon="@drawable/location_pin" />
+
+            <!-- Divider -->
+            <com.google.android.material.divider.MaterialDivider
+                android:id="@+id/search_bar_divider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:alpha="3"
+                android:background="@color/black" />
+
+            <!-- SearchBar for "To" location -->
+            <com.google.android.material.search.SearchBar
+                android:id="@+id/to_search_bar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:hint="To"
+                app:navigationIcon="@drawable/location_pin" />
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <!-- SearchView for "From" location -->
+        <com.google.android.material.search.SearchView
+            android:id="@+id/from_search_view"
+            android:layout_width="match_parent"
+            android:layout_height="236dp"
+            android:hint="From location"
+            app:layout_anchor="@id/from_search_bar">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/from_search_recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+        </com.google.android.material.search.SearchView>
+
+        <!-- SearchView for "To" location -->
+        <com.google.android.material.search.SearchView
+            android:id="@+id/to_search_view"
+            android:layout_width="match_parent"
+            android:layout_height="236dp"
+            android:hint="To location"
+            app:layout_anchor="@id/to_search_bar">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/to_search_recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+        </com.google.android.material.search.SearchView>
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintTop_toBottomOf="@id/search_bars" />
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+
+
+
+
+
+
+
+
+
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/NavRouteTabLayout"
         style="@style/RoundedTabLayoutStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toBottomOf="@id/search"
+        >
 
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
@@ -35,30 +123,8 @@
         android:id="@+id/NavRouteViewPager"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/navigation_buttons"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/NavRouteTabLayout"
         tools:layout_editor_absoluteX="0dp" />
 
-    <LinearLayout
-        android:id="@+id/navigation_buttons"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:padding="16dp"
-        app:layout_constraintBottom_toBottomOf="parent">
-
-        <Button
-            android:id="@+id/prev_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/previous" />
-
-        <Button
-            android:id="@+id/next_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:text="@string/next" />
-    </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
