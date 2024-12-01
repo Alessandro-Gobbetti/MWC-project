@@ -6,9 +6,15 @@ import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Environment;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -21,19 +27,25 @@ import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import android.content.pm.PackageManager;
 import android.widget.Toast;
+import android.widget.Toolbar;
 
 import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.usimaps.DirectionManager;
 import com.example.usimaps.ImageDatabaseHelper;
 import com.example.usimaps.MainActivity;
+import com.example.usimaps.R;
 import com.example.usimaps.databinding.FragmentHomeBinding;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.material.search.SearchBar;
+import com.google.android.material.search.SearchView;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mlkit.vision.barcode.BarcodeScanner;
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions;
@@ -41,7 +53,12 @@ import com.google.mlkit.vision.barcode.BarcodeScanning;
 import com.google.mlkit.vision.barcode.common.Barcode;
 import com.google.mlkit.vision.common.InputImage;
 
+import com.example.usimaps.LocationAdapter;
+
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 
@@ -52,6 +69,11 @@ public class HomeFragment extends Fragment {
     private PreviewView previewView;
     private ImageCapture imageCapture;
     private DirectionManager directionManager;
+    private SearchBar fromSearchBar, toSearchBar;
+    private SearchView fromSearchView, toSearchView;
+
+    private List<String> locationSuggestions;
+    private String selectedFromLocation, selectedToLocation;
 
     private FusedLocationProviderClient fusedLocationClient;
     private Location currentLocation;
@@ -71,6 +93,14 @@ public class HomeFragment extends Fragment {
 
         previewView = binding.cameraPreview;
 
+        fromSearchBar = binding.fromSearchBar;
+        fromSearchView = binding.fromSearchView;
+
+        toSearchBar = binding.toSearchBar;
+        toSearchView = binding.toSearchView;
+
+        locationSuggestions = getLocationSuggestions();
+
         directionManager = new DirectionManager(requireContext());
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext());
 
@@ -82,6 +112,32 @@ public class HomeFragment extends Fragment {
         startCamera();
 
         binding.imageCaptureButton.setOnClickListener(v ->takePhoto());
+
+        // Set up the from search bar and view
+        setupSearchBarAndView(fromSearchBar, fromSearchView, true);
+
+//        fromSearchBar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+//            @Override
+//            public boolean onMenuItemClick(MenuItem item) {
+//                if (item.getItemId() == binding.) {
+//                    // Clear the text in the search bar and search view
+//                    fromSearchBar.setText("");
+//                    fromSearchView.getEditText().setText("");
+//                    return true;
+//                }
+//                return false;
+//            }
+//        });
+
+        fromSearchBar.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.action_qr_scan) {
+                Toast.makeText(requireContext(), "Open QR", Toast.LENGTH_SHORT).show();
+                return true;
+            }
+            return false;
+        });
+        // Set up the to search bar and view
+        setupSearchBarAndView(toSearchBar, toSearchView, false);
 
         return root;
     }
@@ -243,6 +299,7 @@ public class HomeFragment extends Fragment {
         binding = null;
     }
 
+    // TODO: Use this for direction.
     private String convertAzimuthToDirection(float azimuth) {
         if (azimuth >= 337.5 || azimuth < 22.5) return "North";
         else if (azimuth >= 22.5 && azimuth < 67.5) return "Northeast";
@@ -254,4 +311,95 @@ public class HomeFragment extends Fragment {
         else return "Northwest";
     }
 
+    private void setupSearchBarAndView(SearchBar searchBar, SearchView searchView, boolean isFrom) {
+//        // Connect the search bar and search view
+//        searchBar.setupWithSearchView(searchView);
+
+        // Get the RecyclerView from the SearchView
+        RecyclerView recyclerView = isFrom ? binding.fromSearchRecyclerView : binding.toSearchRecyclerView;
+
+        // Set up the RecyclerView
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        // Create an adapter
+        LocationAdapter adapter = new LocationAdapter(getContext(), new ArrayList<>(locationSuggestions));
+
+        // Set the adapter to the RecyclerView
+        recyclerView.setAdapter(adapter);
+
+        // Set up the query text listener to filter suggestions
+        searchView.getEditText().addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s,
+                                          int start, int count, int after) { }
+
+            @Override
+            public void onTextChanged(CharSequence s,
+                                      int start, int before, int count) {
+                // Filter suggestions based on input
+                String query = s.toString().toLowerCase();
+                List<String> filteredList = new ArrayList<>();
+                for (String location : locationSuggestions) {
+                    if (location.toLowerCase().contains(query)) {
+                        filteredList.add(location);
+                    }
+                }
+                adapter.updateData(filteredList);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) { }
+        });
+
+        // Handle item click in suggestions
+        adapter.setOnItemClickListener(selectedLocation -> {
+            searchBar.setText(selectedLocation);
+            searchView.getEditText().setText(selectedLocation);
+            searchView.hide();
+            if (isFrom) {
+                fromLocationSelected(selectedLocation);
+            } else {
+                toLocationSelected(selectedLocation);
+            }
+        });
+    }
+
+    private List<String> getLocationSuggestions() {
+        // TODO: Fetch actual locations from map
+        return Arrays.asList("New York", "Los Angeles", "Chicago", "Houston",
+                "Phoenix", "Philadelphia", "San Antonio", "San Diego",
+                "Dallas", "San Jose");
+    }
+
+    private void fromLocationSelected(String location) {
+        // Called when the "from" location is selected
+        Toast.makeText(requireContext(), "From location selected", Toast.LENGTH_SHORT).show();
+
+        // Check if both locations are selected
+        checkLocationsSelected();
+    }
+
+    private void toLocationSelected(String location) {
+        // Called when the "to" location is selected
+        Toast.makeText(requireContext(), "To location selected", Toast.LENGTH_SHORT).show();
+
+        // Check if both locations are selected
+        checkLocationsSelected();
+    }
+
+    private void checkLocationsSelected() {
+        String fromLocation = fromSearchBar.getText().toString();
+        String toLocation = toSearchBar.getText().toString();
+        if (!fromLocation.isEmpty() && !toLocation.isEmpty()) {
+            // Both locations are selected
+
+
+            locationsSelected(fromLocation, toLocation);
+        }
+    }
+
+    private void locationsSelected(String fromLocation, String toLocation) {
+        // Handle the case when both locations are selected
+        Toast.makeText(requireContext(), "Both locations selected", Toast.LENGTH_SHORT).show();
+    }
 }
