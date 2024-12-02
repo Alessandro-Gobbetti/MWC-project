@@ -29,6 +29,9 @@ import com.google.mlkit.vision.barcode.BarcodeScanning;
 import com.google.mlkit.vision.barcode.common.Barcode;
 import com.google.mlkit.vision.common.InputImage;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 public class QRCodeScannerDialogFragment extends DialogFragment {
@@ -36,6 +39,34 @@ public class QRCodeScannerDialogFragment extends DialogFragment {
     private PreviewView previewView;
     private BarcodeScanner barcodeScanner;
     private ProcessCameraProvider cameraProvider;
+    private Set<String> validLocations;
+
+    // Static
+    public static QRCodeScannerDialogFragment newInstance(ArrayList<String> validLocations) {
+        QRCodeScannerDialogFragment fragment = new QRCodeScannerDialogFragment();
+        Bundle args = new Bundle();
+        args.putStringArrayList("valid_locations", validLocations);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        // Retrieve validLocations from arguments
+        if (getArguments() != null) {
+            ArrayList<String> validLocationsList = getArguments().getStringArrayList("valid_locations");
+            validLocations = new HashSet<>();
+            assert validLocationsList != null;
+            for (String location : validLocationsList) {
+                validLocations.add(location.toLowerCase().trim());
+            }
+        } else {
+            validLocations = new HashSet<>();
+            Toast.makeText(requireContext(), "No valid locations passed: ", Toast.LENGTH_SHORT).show();
+        }
+    }
 
     @Nullable
     @Override
@@ -104,17 +135,23 @@ public class QRCodeScannerDialogFragment extends DialogFragment {
                         for (Barcode barcode : barcodes) {
                             String rawValue = barcode.getRawValue();
                             if (rawValue != null) {
-                                // Pass the result back using Fragment Result API
-                                Toast.makeText(requireContext(), "QR Code Data: " + rawValue, Toast.LENGTH_SHORT).show();
-                                Bundle result = new Bundle();
-                                result.putString("qr_code_result", rawValue);
-                                getParentFragmentManager().setFragmentResult("qr_scan_result", result);
+                                String scannedValue = rawValue.toLowerCase().trim();
+                                if(validLocations.contains(scannedValue)){
+                                    // Pass the result back using Fragment Result API
+                                    Toast.makeText(requireContext(), "QR Code Data: " + rawValue, Toast.LENGTH_SHORT).show();
+                                    Bundle result = new Bundle();
+                                    result.putString("qr_code_result", rawValue);
+                                    getParentFragmentManager().setFragmentResult("qr_scan_result", result);
 
-                                // Dismiss the dialog
-                                dismiss();
+                                    // Dismiss the dialog
+                                    dismiss();
 
-                                break;
+                                    break;
+                                }else {
+                                    Toast.makeText(requireContext(), "Invalid QR Code scanned. Please try again: " + rawValue, Toast.LENGTH_SHORT).show();
+                                }
                             }
+                            break;
                         }
                     })
                     .addOnFailureListener(e -> {

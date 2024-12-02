@@ -156,7 +156,8 @@ public class GalleryFragment extends Fragment {
     }
 
     private void openQRCodeScanner() {
-        QRCodeScannerDialogFragment qrCodeScannerDialogFragment = new QRCodeScannerDialogFragment();
+        ArrayList<String> validLocations = new ArrayList<>(locationSuggestions);
+        QRCodeScannerDialogFragment qrCodeScannerDialogFragment = QRCodeScannerDialogFragment.newInstance(validLocations);
         qrCodeScannerDialogFragment.show(getChildFragmentManager(), "qrCodeScanner");
     }
 
