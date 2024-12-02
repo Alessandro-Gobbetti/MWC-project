@@ -40,6 +40,7 @@ public class QRCodeScannerDialogFragment extends DialogFragment {
     private BarcodeScanner barcodeScanner;
     private ProcessCameraProvider cameraProvider;
     private Set<String> validLocations;
+    private String lastInvalidScannedValue = null;
 
     // Static
     public static QRCodeScannerDialogFragment newInstance(ArrayList<String> validLocations) {
@@ -136,6 +137,12 @@ public class QRCodeScannerDialogFragment extends DialogFragment {
                             String rawValue = barcode.getRawValue();
                             if (rawValue != null) {
                                 String scannedValue = rawValue.toLowerCase().trim();
+
+                                if (scannedValue.equals(lastInvalidScannedValue)) {
+                                    //Same invalid code scaned, skip processing
+                                    break;
+                                }
+
                                 if(validLocations.contains(scannedValue)){
                                     // Pass the result back using Fragment Result API
                                     Toast.makeText(requireContext(), "QR Code Data: " + rawValue, Toast.LENGTH_SHORT).show();
@@ -148,6 +155,7 @@ public class QRCodeScannerDialogFragment extends DialogFragment {
 
                                     break;
                                 }else {
+                                    lastInvalidScannedValue = scannedValue;
                                     Toast.makeText(requireContext(), "Invalid QR Code scanned. Please try again: " + rawValue, Toast.LENGTH_SHORT).show();
                                 }
                             }
