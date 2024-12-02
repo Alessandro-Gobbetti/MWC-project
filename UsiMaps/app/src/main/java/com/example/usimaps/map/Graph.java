@@ -125,6 +125,10 @@ public class Graph {
         Map<Vertex, Double> distance = new HashMap<>();
         Map<Vertex, Vertex> previous = new HashMap<>();
         PriorityQueue<Vertex> pq = new PriorityQueue<>(Comparator.comparingDouble(distance::get));
+        System.out.println("Source: " + source.getName() +  "Destination: " + destination.getName());
+        for (Vertex v : map.keySet()) {
+            System.out.println(v.getName());
+        }
 
         distance.put(source, 0.0);
         pq.add(source);

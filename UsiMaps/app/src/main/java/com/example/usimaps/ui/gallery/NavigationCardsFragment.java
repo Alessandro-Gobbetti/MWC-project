@@ -18,6 +18,7 @@ import com.example.usimaps.map.Vertex;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -34,6 +35,12 @@ public class NavigationCardsFragment extends Fragment {
     private ViewPager2 viewPager2;
     private TabLayout tabLayout;
     private ViewPagerAdapter adapter;
+    
+    public NavigationCardsFragment() {
+        // Required empty public constructor
+        this.path = new ArrayList<>();
+        this.instructions = new ArrayList<>();
+    }
 
 
     public NavigationCardsFragment(List<Vertex> path, List<String> instructions) {

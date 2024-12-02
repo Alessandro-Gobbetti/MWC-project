@@ -16,6 +16,7 @@ import com.example.usimaps.RecyclerViewAdapter;
 import com.example.usimaps.databinding.FragmentRouteListBinding;
 import com.example.usimaps.map.Vertex;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -29,7 +30,12 @@ public class RouteListFragment extends Fragment {
     // binding
     private FragmentRouteListBinding binding;
     private RecyclerViewAdapter adapter;
-
+    
+    public RouteListFragment() {
+        // Required empty public constructor
+        this.path = new ArrayList<>();
+        this.instructions = new ArrayList<>();
+    }
 
 
     public RouteListFragment(List<Vertex> path, List<String> instructions) {
