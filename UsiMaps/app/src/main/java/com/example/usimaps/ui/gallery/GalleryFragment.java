@@ -15,6 +15,7 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.example.usimaps.QRCodeScannerDialogFragment;
 import com.example.usimaps.R;
 import com.example.usimaps.RecyclerViewAdapter;
 import com.example.usimaps.ViewPagerAdapter;
@@ -131,10 +132,20 @@ public class GalleryFragment extends Fragment {
         setupSearchBarAndView(fromSearchBar, fromSearchView, true);
         setupSearchBarAndView(toSearchBar, toSearchView, false);
 
+        // Set up the Fragment Result Listener
+        getChildFragmentManager().setFragmentResultListener("qr_scan_result", this, (requestKey, bundle) -> {
+            String qrResult = bundle.getString("qr_code_result");
+            if (qrResult != null) {
+                fromSearchBar.setText(qrResult);
+                fromSearchView.getEditText().setText(qrResult);
+                fromLocationSelected(qrResult);
+            }
+        });
+
         //listener for QR code button inside the "from" search bar
         fromSearchBar.setOnMenuItemClickListener(item -> {
             if (item.getItemId() == R.id.action_qr_scan) {
-                Toast.makeText(requireContext(), "Open QR", Toast.LENGTH_SHORT).show();
+                openQRCodeScanner();
                 return true;
             }
             return false;
@@ -142,6 +153,11 @@ public class GalleryFragment extends Fragment {
 
         return root;
 
+    }
+
+    private void openQRCodeScanner() {
+        QRCodeScannerDialogFragment qrCodeScannerDialogFragment = new QRCodeScannerDialogFragment();
+        qrCodeScannerDialogFragment.show(getChildFragmentManager(), "qrCodeScanner");
     }
 
     private void updatePath(List<Vertex> path, List<String> instructions) {
@@ -308,39 +324,39 @@ public class GalleryFragment extends Fragment {
                     toLocationSelected(selectedLocation);
                 }
             });
+    }
+
+    private void fromLocationSelected(String location) {
+        // Called when the "from" location is selected
+        Toast.makeText(requireContext(), "From location selected", Toast.LENGTH_SHORT).show();
+        selectedFromLocation = location;
+
+        // Check if both locations are selected
+        checkLocationsSelected();
+    }
+
+    private void toLocationSelected(String location) {
+        // Called when the "to" location is selected
+        Toast.makeText(requireContext(), "To location selected", Toast.LENGTH_SHORT).show();
+        selectedToLocation = location;
+
+        // Check if both locations are selected
+        checkLocationsSelected();
+    }
+
+    private void checkLocationsSelected() {
+        String fromLocation = fromSearchBar.getText().toString();
+        String toLocation = toSearchBar.getText().toString();
+        if (!fromLocation.isEmpty() && !toLocation.isEmpty()) {
+            // Both locations are selected
+            updateRoute(fromLocation, toLocation);
+
+            locationsSelected(fromLocation, toLocation);
         }
+    }
 
-        private void fromLocationSelected(String location) {
-                // Called when the "from" location is selected
-                Toast.makeText(requireContext(), "From location selected", Toast.LENGTH_SHORT).show();
-                selectedFromLocation = location;
-
-                // Check if both locations are selected
-                checkLocationsSelected();
-        }
-
-        private void toLocationSelected(String location) {
-                // Called when the "to" location is selected
-                Toast.makeText(requireContext(), "To location selected", Toast.LENGTH_SHORT).show();
-                selectedToLocation = location;
-
-                // Check if both locations are selected
-                checkLocationsSelected();
-        }
-
-        private void checkLocationsSelected() {
-            String fromLocation = fromSearchBar.getText().toString();
-            String toLocation = toSearchBar.getText().toString();
-            if (!fromLocation.isEmpty() && !toLocation.isEmpty()) {
-                // Both locations are selected
-                updateRoute(fromLocation, toLocation);
-
-                locationsSelected(fromLocation, toLocation);
-            }
-        }
-
-        private void locationsSelected(String fromLocation, String toLocation) {
-            // Handle the case when both locations are selected
-            Toast.makeText(requireContext(), "Both locations selected", Toast.LENGTH_SHORT).show();
-        }
+    private void locationsSelected(String fromLocation, String toLocation) {
+        // Handle the case when both locations are selected
+        Toast.makeText(requireContext(), "Both locations selected", Toast.LENGTH_SHORT).show();
+    }
 }
