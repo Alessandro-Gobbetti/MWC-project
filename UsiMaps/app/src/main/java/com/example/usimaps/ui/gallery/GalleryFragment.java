@@ -54,6 +54,9 @@ public class GalleryFragment extends Fragment {
 
     private Graph graph = new Graph().generateUSIMap();
 
+    private List<Vertex> path = new ArrayList<>();
+    private List<String> instructions = new ArrayList<>();
+
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         GalleryViewModel galleryViewModel =
@@ -69,42 +72,19 @@ public class GalleryFragment extends Fragment {
         toSearchBar = binding.toSearchBar;
         toSearchView = binding.toSearchView;
 
-
-        String start = "D0:04";
-        String end = "D1:15";
-        Vertex startVertex = graph.getVertexByName(start);
-        Vertex endVertex = graph.getVertexByName(end);
-
         this.locationSuggestions = graph.getSearchableNames();
 
 
-        // get the shortest path from start to end
-        Pair<List<Vertex>, Double> shortestPath = graph.getShortestPath(startVertex, endVertex);
-        List<Vertex> path = shortestPath.getFirst();
-        double weight = shortestPath.getSecond();
-
-        // simplify the path
-        Pair<List<Vertex>, List<String>> pathInstructions = graph.toSimpleInstructions(path);
-        path = pathInstructions.getFirst();
-        List<String> instructions = pathInstructions.getSecond();
-
-        // create a viewpager2 object
-//        createViewPager(root, path, instructions);
-//        createRecyclerView(root, path, instructions);
-
-
-//        viewPager = root.findViewById(R.id.NavRouteViewPager);
         viewPager = binding.NavRouteViewPager;
-        List<Vertex> finalPath = path;
         viewPager.setAdapter(new FragmentStateAdapter(this) {
 
             @NonNull
             @Override
             public Fragment createFragment(int position) {
                 if (position == 0) {
-                    return new RouteListFragment(finalPath, instructions);
+                    return new RouteListFragment();
                 } else {
-                    return new NavigationCardsFragment(finalPath, instructions);
+                    return new NavigationCardsFragment();
                 }
             }
 
@@ -117,7 +97,8 @@ public class GalleryFragment extends Fragment {
 
         // disable swipe
         viewPager.setUserInputEnabled(false);
-
+        viewPager.setOffscreenPageLimit(2);
+        showEmptyPathMessage(new ArrayList<>());
 
 
         TabLayout tabLayout = root.findViewById(R.id.NavRouteTabLayout);
@@ -152,7 +133,6 @@ public class GalleryFragment extends Fragment {
         });
 
         return root;
-
     }
 
     private void openQRCodeScanner() {
@@ -161,7 +141,7 @@ public class GalleryFragment extends Fragment {
         qrCodeScannerDialogFragment.show(getChildFragmentManager(), "qrCodeScanner");
     }
 
-    private void updatePath(List<Vertex> path, List<String> instructions) {
+    private void updatePath() {
         // create a viewpager2 object
         FragmentStateAdapter adapter = (FragmentStateAdapter) this.viewPager.getAdapter();
         if (adapter != null) {
@@ -173,6 +153,20 @@ public class GalleryFragment extends Fragment {
                     ((NavigationCardsFragment) fragment).updatePath(path, instructions);
                 }
             }
+        }
+
+        showEmptyPathMessage(path);
+    }
+
+    private void showEmptyPathMessage(List<Vertex> path) {
+        if (path.isEmpty()) {
+            binding.missingRouteIcon.setVisibility(View.VISIBLE);
+            binding.emptyRouteText.setVisibility(View.VISIBLE);
+            binding.NavRouteTabLayout.setVisibility(View.GONE);
+        } else {
+            binding.missingRouteIcon.setVisibility(View.GONE);
+            binding.emptyRouteText.setVisibility(View.GONE);
+            binding.NavRouteTabLayout.setVisibility(View.VISIBLE);
         }
     }
 
@@ -217,10 +211,10 @@ public class GalleryFragment extends Fragment {
         List<Vertex> path = shortestPath.getFirst();
         double weight = shortestPath.getSecond();
         Pair<List<Vertex>, List<String>> pathInstructions = graph.toSimpleInstructions(path);
-        path = pathInstructions.getFirst();
-        List<String> instructions = pathInstructions.getSecond();
+        this.path = pathInstructions.getFirst();
+        this.instructions = pathInstructions.getSecond();
 
-        updatePath(path, instructions);
+        updatePath();
     }
 
 
@@ -230,6 +224,18 @@ public class GalleryFragment extends Fragment {
         super.onDestroyView();
         binding = null;
     }
+
+//    @Override
+//    public void onSaveInstanceState(@NonNull Bundle outState) {
+//        super.onSaveInstanceState(outState);
+//        // Save the path and instructions
+//        outState.putParcelableArrayList("path", new ArrayList<>(path));
+//        outState.putStringArrayList("instructions", new ArrayList<>(instructions));
+//    }
+//
+//    @Override
+//    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+//    }
 
 
     // define button click listener for the next and previous buttons

@@ -23,7 +23,7 @@
                 android:id="@+id/from_search_bar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
+                android:layout_marginBottom="4dp"
                 android:hint="From"
                 app:menu="@menu/from_search_bar_menu"
                 app:navigationIcon="@drawable/location_pin" />
@@ -41,6 +41,7 @@
                 android:id="@+id/to_search_bar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
                 android:layout_marginBottom="8dp"
                 android:hint="To"
                 app:navigationIcon="@drawable/location_pin" />
@@ -94,10 +95,6 @@
         tools:ignore="MissingConstraints" />
 
 
-
-
-
-
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/NavRouteTabLayout"
         style="@style/RoundedTabLayoutStyle"
@@ -105,23 +102,37 @@
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         app:layout_constraintTop_toBottomOf="@id/search"
-        >
+        tools:layout_editor_absoluteX="16dp">
 
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/route"
-            />
+            android:text="@string/route" />
 
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/navigate"
-            />
+            android:text="@string/navigate" />
 
     </com.google.android.material.tabs.TabLayout>
 
+    <ImageView
+        android:id="@+id/missingRouteIcon"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:gravity="center"
+        android:src="@drawable/missing_route"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/search" />
 
+    <TextView
+        android:id="@+id/emptyRouteText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="Select a route to navigate"
+        app:layout_constraintTop_toBottomOf="@+id/missingRouteIcon"
+        />
 
     <!-- Navigation Buttons -->
     <androidx.viewpager2.widget.ViewPager2
@@ -131,5 +142,9 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/NavRouteTabLayout"
         tools:layout_editor_absoluteX="0dp" />
+
+
+    <!-- Empty Route text -->
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
