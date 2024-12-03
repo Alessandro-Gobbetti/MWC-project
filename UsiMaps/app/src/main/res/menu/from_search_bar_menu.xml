@@ -6,4 +6,10 @@
         android:icon="@drawable/qr_code_scanner_small"
         android:title="QR Scanner"
         app:showAsAction="always" />
+
+    <item
+        android:id="@+id/action_voice_input"
+        android:icon="@drawable/mic_drop"
+        android:title="Voice Input"
+        app:showAsAction="always" />
 </menu>

@@ -63,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
         if (runningOorLater) {
             getCameraPermission();
             getLocationPermission();
+            getMicrophonePermission();
         }
     }
 
@@ -99,6 +100,19 @@ public class MainActivity extends AppCompatActivity {
                 != PackageManager.PERMISSION_GRANTED)
         {
             ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.ACCESS_FINE_LOCATION},
+                    REQUEST_CODE_PERMISSIONS);
+        }
+        else
+        {
+            return;
+        }
+    }
+
+    private void getMicrophonePermission(){
+        if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED)
+        {
+            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.RECORD_AUDIO},
                     REQUEST_CODE_PERMISSIONS);
         }
         else

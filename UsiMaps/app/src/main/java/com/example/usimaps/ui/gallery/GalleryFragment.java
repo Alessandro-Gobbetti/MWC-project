@@ -1,6 +1,11 @@
 package com.example.usimaps.ui.gallery;
 
+import android.app.AlertDialog;
+import android.content.Intent;
 import android.os.Bundle;
+import android.speech.RecognitionListener;
+import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,6 +42,7 @@ import android.text.TextWatcher;
 import android.widget.Toast;
 
 import java.util.List;
+import java.util.Locale;
 
 import kotlin.Pair;
 
@@ -56,6 +62,95 @@ public class GalleryFragment extends Fragment {
 
     private List<Vertex> path = new ArrayList<>();
     private List<String> instructions = new ArrayList<>();
+
+    // Speech Recognition
+    private SpeechRecognizer speechRecognizer;
+    private Intent speechRecognizerIntent;
+    private boolean isListening = false;
+    private AlertDialog listeningDialog;
+    //
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        // Initialize SpeechRecognizer
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(requireContext());
+        speechRecognizer.setRecognitionListener(new RecognitionListener() {
+            @Override
+            public void onReadyForSpeech(Bundle params) {
+                // Optional: Provide feedback to the user
+            }
+
+            @Override
+            public void onBeginningOfSpeech() {
+                // Optional
+            }
+
+            @Override
+            public void onRmsChanged(float rmsdB) {
+                // Optional
+            }
+
+            @Override
+            public void onBufferReceived(byte[] buffer) {
+                // Optional
+            }
+
+            @Override
+            public void onEndOfSpeech() {
+                isListening = false;
+                if (listeningDialog != null && listeningDialog.isShowing()) {
+                    listeningDialog.dismiss();
+                }
+            }
+
+            @Override
+            public void onError(int error) {
+                isListening = false;
+                if (listeningDialog != null && listeningDialog.isShowing()) {
+                    listeningDialog.dismiss();
+                }
+                Toast.makeText(requireContext(), "Speech recognition error", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onResults(Bundle results) {
+                isListening = false;
+                if (listeningDialog != null && listeningDialog.isShowing()) {
+                    listeningDialog.dismiss();
+                }
+
+                ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                if (matches != null && !matches.isEmpty()) {
+                    String recognizedText = matches.get(0);
+
+                    System.out.println("RECOGNIZED TEXT" + recognizedText);
+                    Toast.makeText(requireContext(), recognizedText, Toast.LENGTH_SHORT).show();
+
+//            fromSearchBar.setText(recognizedText);
+//            fromSearchView.getEditText().setText(recognizedText);
+//            fromLocationSelected(recognizedText);
+                }
+            }
+
+            @Override
+            public void onPartialResults(Bundle partialResults) {
+                // Optional
+            }
+
+            @Override
+            public void onEvent(int eventType, Bundle params) {
+                // Optional
+            }
+        });
+
+        // Set up the intent
+        speechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-US");// maybe put locale
+    }
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -128,11 +223,37 @@ public class GalleryFragment extends Fragment {
             if (item.getItemId() == R.id.action_qr_scan) {
                 openQRCodeScanner();
                 return true;
+            } else if (item.getItemId() == R.id.action_voice_input) {
+                Toast.makeText(requireContext(), "Mic clicked!", Toast.LENGTH_SHORT).show();
+                startVoiceInput();
+                return true;
             }
             return false;
         });
 
         return root;
+    }
+
+    //Speech Recognition
+
+    private void startVoiceInput() {
+        if (!isListening) {
+            speechRecognizer.startListening(speechRecognizerIntent);
+            isListening = true;
+            showListeningDialog();
+        }
+    }
+
+    private void showListeningDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setMessage("Listening...")
+                .setNegativeButton("Cancel", (dialog, which) -> {
+                    speechRecognizer.cancel();
+                    isListening = false;
+                    dialog.dismiss();
+                });
+        listeningDialog = builder.create();
+        listeningDialog.show();
     }
 
     private void openQRCodeScanner() {
@@ -218,10 +339,13 @@ public class GalleryFragment extends Fragment {
     }
 
 
-
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+
+        if (speechRecognizer != null) {
+            speechRecognizer.destroy();
+        }
         binding = null;
     }
 
@@ -280,57 +404,59 @@ public class GalleryFragment extends Fragment {
 //    }
 
     private void setupSearchBarAndView(SearchBar searchBar, SearchView searchView, boolean isFrom) {
-    //        // Connect the search bar and search view
-    //        searchBar.setupWithSearchView(searchView);
+        //        // Connect the search bar and search view
+        //        searchBar.setupWithSearchView(searchView);
 
-            // Get the RecyclerView from the SearchView
-            RecyclerView recyclerView = isFrom ? binding.fromSearchRecyclerView : binding.toSearchRecyclerView;
+        // Get the RecyclerView from the SearchView
+        RecyclerView recyclerView = isFrom ? binding.fromSearchRecyclerView : binding.toSearchRecyclerView;
 
-            // Set up the RecyclerView
-            recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        // Set up the RecyclerView
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
 
-            // Create an adapter
-            LocationAdapter adapter = new LocationAdapter(getContext(), new ArrayList<>(locationSuggestions));
+        // Create an adapter
+        LocationAdapter adapter = new LocationAdapter(getContext(), new ArrayList<>(locationSuggestions));
 
-            // Set the adapter to the RecyclerView
-            recyclerView.setAdapter(adapter);
+        // Set the adapter to the RecyclerView
+        recyclerView.setAdapter(adapter);
 
-            // Set up the query text listener to filter suggestions
-            searchView.getEditText().addTextChangedListener(new TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence s,
-                                              int start, int count, int after) { }
+        // Set up the query text listener to filter suggestions
+        searchView.getEditText().addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s,
+                                          int start, int count, int after) {
+            }
 
-                @Override
-                public void onTextChanged(CharSequence s,
-                                          int start, int before, int count) {
-                    // Filter suggestions based on input
-                    String query = s.toString().toLowerCase();
-                    List<String> filteredList = new ArrayList<>();
-                    for (String location : locationSuggestions) {
-                        if (location.toLowerCase().contains(query)) {
-                            filteredList.add(location);
-                        }
+            @Override
+            public void onTextChanged(CharSequence s,
+                                      int start, int before, int count) {
+                // Filter suggestions based on input
+                String query = s.toString().toLowerCase();
+                List<String> filteredList = new ArrayList<>();
+                for (String location : locationSuggestions) {
+                    if (location.toLowerCase().contains(query)) {
+                        filteredList.add(location);
                     }
-                    adapter.updateData(filteredList);
                 }
+                adapter.updateData(filteredList);
+            }
 
-                @Override
-                public void afterTextChanged(Editable s) { }
-            });
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
 
-            // Handle item click in suggestions
-            adapter.setOnItemClickListener(selectedLocation -> {
-                searchBar.setText(selectedLocation);
-                searchView.getEditText().setText(selectedLocation);
-                searchView.hide();
-                if (isFrom) {
-                    fromLocationSelected(selectedLocation);
-                } else {
-                    toLocationSelected(selectedLocation);
-                }
-            });
+        // Handle item click in suggestions
+        adapter.setOnItemClickListener(selectedLocation -> {
+            searchBar.setText(selectedLocation);
+            searchView.getEditText().setText(selectedLocation);
+            searchView.hide();
+            if (isFrom) {
+                fromLocationSelected(selectedLocation);
+            } else {
+                toLocationSelected(selectedLocation);
+            }
+        });
     }
 
     private void fromLocationSelected(String location) {
