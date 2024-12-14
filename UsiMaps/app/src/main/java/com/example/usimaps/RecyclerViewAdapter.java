@@ -66,7 +66,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
         // Get element from your dataset at this position and replace the
         // contents of the view with that element
-        viewHolder.getTextView().setText(instructions.get(position) + "\n\n" + path.get(position).getName());
+        viewHolder.getTextView().setText(instructions.get(position));
 
         // set the icon
         if (position == 0) {
@@ -75,7 +75,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             viewHolder.getIconView().setImageResource(R.drawable.goal);
         } else {
             VertexType type = path.get(position).getType();
-            if (type == VertexType.STAIR)
+            if (type == VertexType.STAIR || instructions.get(position).contains("stairs"))
                 viewHolder.getIconView().setImageResource(R.drawable.stairs);
             else if (instructions.get(position).contains("left")) {
                 viewHolder.getIconView().setImageResource(R.drawable.ic_turn_left);

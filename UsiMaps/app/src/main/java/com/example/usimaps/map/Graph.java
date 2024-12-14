@@ -211,12 +211,12 @@ public class Graph {
             addVertex(v);
 
         // get the closest point to the vertex on the edge
-        double x1 = e.getSource().getLongitude();
-        double y1 = e.getSource().getLatitude();
-        double x2 = e.getDestination().getLongitude();
-        double y2 = e.getDestination().getLatitude();
-        double x3 = v.getLongitude();
-        double y3 = v.getLatitude();
+        double x1 = e.getSource().getLatitude();
+        double y1 = e.getSource().getLongitude();
+        double x2 = e.getDestination().getLatitude();
+        double y2 = e.getDestination().getLongitude();
+        double x3 = v.getLatitude();
+        double y3 = v.getLongitude();
 
         // calculate the closest point
         double u = ((x3 - x1) * (x2 - x1) + (y3 - y1) * (y2 - y1)) / (Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
@@ -237,11 +237,11 @@ public class Graph {
 
         // create new edge from edge to vertex
         double weight = computeDistance(v, connectionVertex);
-        addEdge(connectionVertex, v, weight1, e.getName() + "-" + v.getName());
+        addEdge(connectionVertex, v, weight, e.getName() + "-" + v.getName());
 
         // remove old edge
-        map.get(e.getSource()).remove(e);
-        map.get(e.getDestination()).remove(e);
+//        map.get(e.getSource()).remove(e);
+//        map.get(e.getDestination()).remove(e);
     }
 
     /**
@@ -273,12 +273,12 @@ public class Graph {
         Edge closestEdge = null;
         double minDistance = Double.MAX_VALUE;
         for (Edge edge : edges) {
-            double x1 = edge.getSource().getLongitude();
-            double y1 = edge.getSource().getLatitude();
-            double x2 = edge.getDestination().getLongitude();
-            double y2 = edge.getDestination().getLatitude();
-            double x3 = v.getLongitude();
-            double y3 = v.getLatitude();
+            double x1 = edge.getSource().getLatitude();
+            double y1 = edge.getSource().getLongitude();
+            double x2 = edge.getDestination().getLatitude();
+            double y2 = edge.getDestination().getLongitude();
+            double x3 = v.getLatitude();
+            double y3 = v.getLongitude();
 
             // calculate the closest point
             double u = ((x3 - x1) * (x2 - x1) + (y3 - y1) * (y2 - y1)) / (Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
@@ -318,6 +318,26 @@ public class Graph {
         double c = Math.pow(x3 - x1, 2) + Math.pow(y3 - y1, 2);
 
         return Math.acos((a + b - c) / Math.sqrt(4 * a * b));
+    }
+
+    public double getSignedAngle(Vertex v1, Vertex v2, Vertex v3) {
+        double x1 = v1.getLongitude();
+        double y1 = v1.getLatitude();
+        double x2 = v2.getLongitude();
+        double y2 = v2.getLatitude();
+        double x3 = v3.getLongitude();
+        double y3 = v3.getLatitude();
+
+        double a = Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2);
+        double b = Math.pow(x2 - x3, 2) + Math.pow(y2 - y3, 2);
+        double c = Math.pow(x3 - x1, 2) + Math.pow(y3 - y1, 2);
+
+        double angle = Math.acos((a + b - c) / Math.sqrt(4 * a * b));
+        double cross = (x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1);
+        if (cross < 0) {
+            angle = -angle;
+        }
+        return angle;
     }
 
     public double computeDistance(Vertex v1, Vertex v2) {
@@ -368,6 +388,26 @@ public class Graph {
         return simplifiedPath;
     }
 
+    private boolean isRight(final double angle) {
+        return angle > 180 || angle < 0;
+    }
+
+    public int roundDistance(final double distance) {
+        if (distance < 4) {
+            // round to closest integer
+            return (int) Math.round(distance);
+        } else if (distance < 30) {
+            // round to closest 5
+            return (int) Math.round(distance / 5) * 5;
+        } else if (distance < 100) {
+            // round to closest 10
+            return (int) Math.round(distance / 10) * 10;
+        } else {
+            // round to closest 50
+            return (int) Math.round(distance / 50) * 50;
+        }
+    }
+
     /**
      * Returns the instructions to follow the path
      * Such as: "Follow the corridor", "Turn left", "Take the stairs on the right up to the first floor"
@@ -398,29 +438,55 @@ public class Graph {
             Vertex v1 = path.get(i - 1);
             Vertex v2 = path.get(i);
             Vertex v3 = path.get(i + 1);
-            double angle = Math.toDegrees(getAngle(v1, v2, v3));
+            double angle = Math.toDegrees(getSignedAngle(v1, v2, v3));
             // check if stairs
+            System.out.println("ANALYZING: " + v1.getName() + " | " + v2.getName() + " | " + v3.getName() + " | " + angle);
 
-            if (v2.getType() == VertexType.STAIR || v3.getType() == VertexType.STAIR) {
+            // skip vertices if distance is too small
+            if (computeDistance(v2, v3) < 1.0) {
+                continue;
+            }
 
-                // skip all next stairs
-                while (i < path.size() - 1 && path.get(i).getType() == VertexType.STAIR) {
+            if (v2.getType() != VertexType.STAIR && v3.getType() == VertexType.STAIR) {
+
+                // next vertex is a stair
+                while (i < path.size() - 2 && path.get(i+1).getType() == VertexType.STAIR) {
+                    System.out.println("Skipping stair: " + path.get(i+1).getName());
                     i++;
                 }
 
                 int finalFloor = path.get(i).getFloor();
                 boolean up = v2.getFloor() < finalFloor;
+                boolean right = isRight(angle);
+                String floor = ordinal(finalFloor);
+
+                instructions.add("Take the stairs on the " + (right ? "right" : "left") + " " + (up ? "up" : "down") + " to the " + floor + " floor");
+            } else if (v2.getType() == VertexType.STAIR) {
+                // skip all next stairs
+                while (i < path.size() - 2 && path.get(i+1).getType() == VertexType.STAIR) {
+                    System.out.println("Skipping stair: " + path.get(i+1).getName());
+                    i++;
+                }
+                int finalFloor = path.get(i).getFloor();
+                boolean up = v2.getFloor() < finalFloor;
                 // compute final floor
                 String floor = ordinal(finalFloor);
-                instructions.add("Take the stairs on the " + (angle < 90 ? "right" : "left") + " " + (up ? "up" : "down") + " to the " + floor + " floor");
-            } else if (angle < 180-angle_threshold && angle > 0) {
-                instructions.add("Turn right");
-            } else if ((angle > 180+angle_threshold && angle < 360-angle_threshold) || angle < 0) {
-                instructions.add("Turn left");
+                instructions.add("Take the stairs " + (up ? "up" : "down") + " to the " + floor + " floor");
+            } else if (isRight(angle)) {
+                double distance =  computeDistance(v2, v3);
+                int roundedDistance = roundDistance(distance);
+                instructions.add(getTurnPhrase("right", roundedDistance));
+//                instructions.add("Turn right and walk " + roundedDistance + " meters");
             } else {
-                instructions.add("Continue straight");
+                double distance =  computeDistance(v2, v3);
+                int roundedDistance = roundDistance(distance);
+                instructions.add(getTurnPhrase("left", roundedDistance));
+//                instructions.add("Turn left and walk " + roundedDistance + " meters");
             }
+
             simplifiedPath.add(v2);
+            System.out.println("->: " + instructions.get(instructions.size() - 1));
+
         }
         instructions.add("Destination: " + path.get(path.size() - 1).getName());
         simplifiedPath.add(path.get(path.size() - 1));
@@ -430,9 +496,53 @@ public class Graph {
         // print all coordinates
         System.out.println("||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
         for (Vertex v : simplifiedPath) {
-            System.out.println(v.getName() + " " + v.getLongitude() + " " + v.getLatitude());
+            System.out.println(v.getName() + " " + v.getLatitude() + " " + v.getLongitude() + " " + v.getFloor() + " " + v.getType());
         }
+
+        System.out.println("Distances: ");
+        for (int i = 0; i < simplifiedPath.size() - 1; i++) {
+            System.out.println(computeDistance(simplifiedPath.get(i), simplifiedPath.get(i + 1)));
+        }
+
         return new Pair<>(simplifiedPath, instructions);
+    }
+
+    /**
+     * Returns the instructions to follow the path. It picks randomly from a set of predefined instructions to diversify the instructions
+     *
+     * @param leftRight the direction to turn
+     * @param distance the distance to walk
+     * @return the instruction
+     */
+    private String getTurnPhrase(String leftRight, int distance) {
+        // list of predefined instructions
+        String[] instructions = {
+                "Turn " + leftRight + " and walk " + distance + " meters",
+                "Take a " + leftRight + " turn and walk " + distance + " meters",
+                "Turn " + leftRight + " and continue for " + distance + " meters",
+                "Take a " + leftRight + " turn and continue for " + distance + " meters",
+                "Turn " + leftRight + " and proceed for " + distance + " meters",
+                "Take a " + leftRight + " turn and proceed for " + distance + " meters",
+                "Turn " + leftRight + " and go straight for " + distance + " meters",
+                "Take a " + leftRight + " turn and go straight for " + distance + " meters",
+                "Turn " + leftRight + " and keep going for " + distance + " meters",
+                "Take a " + leftRight + " turn and keep going for " + distance + " meters",
+                "Turn " + leftRight + " and walk straight for " + distance + " meters",
+                "Take a " + leftRight + " turn and walk straight for " + distance + " meters",
+                "Turn " + leftRight + " and continue straight for " + distance + " meters",
+                "Take a " + leftRight + " turn and continue straight for " + distance + " meters",
+                "Turn " + leftRight + " and proceed straight for " + distance + " meters",
+                "Take a " + leftRight + " turn and proceed straight for " + distance + " meters",
+                "Turn " + leftRight + " and go straight ahead for " + distance + " meters",
+                "Take a " + leftRight + " turn and go straight ahead for " + distance + " meters",
+                "Turn " + leftRight + " and keep going straight for " + distance + " meters",
+                "Take a " + leftRight + " turn and keep going straight for " + distance + " meters",
+                "Turn " + leftRight + " and walk straight ahead for " + distance + " meters",
+                "Take a " + leftRight + " turn and walk straight ahead for " + distance + " meters",
+                "Turn " + leftRight + " and continue straight ahead for " + distance + " meters"
+        };
+        int random = (int) (Math.random() * instructions.length);
+        return instructions[random];
     }
 
     private String ordinal(int i) {

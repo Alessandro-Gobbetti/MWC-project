@@ -26,7 +26,7 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
 
         // populate the fragmentList with the path
         for (int i = 0; i < path.size(); i++) {
-            fragmentList.add(new InstructionCardFragment(instructions.get(i) + "\n\n" + path.get(i).getName(), path.get(i).getImagePath()));
+            fragmentList.add(new InstructionCardFragment(instructions.get(i), path.get(i).getImagePath()));
         }
     }
 

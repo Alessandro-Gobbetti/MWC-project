@@ -4,16 +4,16 @@ public class Vertex {
 
     private String name;
     private VertexType type;
-    private double longitude;
     private double latitude;
+    private double longitude;
     private int floor;
     private String imagepath;
 
-    public Vertex(String name, VertexType type, double longitude, double latitude, int floor) {
+    public Vertex(String name, VertexType type, double latitude, double longitude, int floor) {
         this.name = name;
         this.type = type;
-        this.longitude = longitude;
         this.latitude = latitude;
+        this.longitude = longitude;
         this.floor = floor;
 
         // image paths array
