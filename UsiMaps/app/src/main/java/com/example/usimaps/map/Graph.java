@@ -1,7 +1,17 @@
 package com.example.usimaps.map;
 
+import static android.content.Context.MODE_PRIVATE;
+
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -19,7 +29,7 @@ import kotlin.Pair;
  * Graph class
  * Represents a graph with vertices and edges
  */
-public class Graph {
+public class Graph implements Serializable {
     // map of vertices to edges
     private Map<Vertex, Set<Edge>> map;
 
@@ -619,6 +629,40 @@ public class Graph {
 
         return graph;
     }
+
+
+
+
+    public static Graph loadGraph(FileInputStream fileIn) {
+        try {
+            ObjectInputStream objectIn = new ObjectInputStream(fileIn);
+            Graph graph = (Graph) objectIn.readObject();
+            objectIn.close();
+            return graph;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static boolean saveGraph(FileOutputStream fileout, Graph graph) {
+        try {
+            ObjectOutputStream objectOut = new ObjectOutputStream(fileout);
+            objectOut.writeObject(graph);
+            objectOut.close();
+            return true;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+
+
+    }
+
+//    private static void saveGraph(Graph graph, String filename) {
+//        // save the graph to a file
+//        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filename
 }
 
 

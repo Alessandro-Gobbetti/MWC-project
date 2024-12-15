@@ -1,6 +1,8 @@
 package com.example.usimaps.map;
 
-public class Edge {
+import java.io.Serializable;
+
+public class Edge implements Serializable {
     private final Vertex source;
     private final Vertex destination;
     private final double weight;

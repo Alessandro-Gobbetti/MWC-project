@@ -1,6 +1,8 @@
 package com.example.usimaps.map;
 
-public class Vertex {
+import java.io.Serializable;
+
+public class Vertex implements Serializable {
 
     private String name;
     private VertexType type;
