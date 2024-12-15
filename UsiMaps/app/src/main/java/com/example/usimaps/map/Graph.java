@@ -430,7 +430,7 @@ public class Graph implements Serializable {
         path = simplifyPath(path, 20);
 
         if (path.size() == 1) {
-            instructions.add("You are already at " + path.get(0));
+            instructions.add("You are already at " + path.get(0).getName());
             return new Pair<>(path, instructions);
         }
         if (path.size() == 2) {
