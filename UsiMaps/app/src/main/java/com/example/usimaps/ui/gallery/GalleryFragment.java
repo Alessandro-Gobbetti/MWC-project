@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
+import android.speech.tts.TextToSpeech;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -68,11 +69,38 @@ public class GalleryFragment extends Fragment {
     private Intent speechRecognizerIntent;
     private boolean isListening = false;
     private AlertDialog listeningDialog;
+
+    private TextToSpeech textToSpeech;
     //
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        textToSpeech = new TextToSpeech(requireContext(), new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if (status == TextToSpeech.SUCCESS) {
+                    // Set language
+                    int result = textToSpeech.setLanguage(Locale.getDefault());
+                    if (result == TextToSpeech.LANG_MISSING_DATA ||
+                            result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                        Toast.makeText(requireContext(), "TTS language not supported", Toast.LENGTH_SHORT).show();
+                    } else {
+                        // TTS is ready, set up the button listener
+//                        speakButton.setOnClickListener(v -> {
+//                            // Speak out the instruction
+//                            String instruction = "Turn left in 100 meters onto Main Street.";
+//                            speakInstructions("Testing speech");
+//                            textToSpeech.speak(instruction, TextToSpeech.QUEUE_FLUSH, null, "InstructionID");
+//                        });
+                        Toast.makeText(requireContext(), "TTS OKAY", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "TTS initialization failed", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
 
         // Initialize SpeechRecognizer
         speechRecognizer = SpeechRecognizer.createSpeechRecognizer(requireContext());
@@ -128,9 +156,9 @@ public class GalleryFragment extends Fragment {
                     System.out.println("RECOGNIZED TEXT" + recognizedText);
                     Toast.makeText(requireContext(), recognizedText, Toast.LENGTH_SHORT).show();
 
-//            fromSearchBar.setText(recognizedText);
-//            fromSearchView.getEditText().setText(recognizedText);
-//            fromLocationSelected(recognizedText);
+//                    fromSearchBar.setText(recognizedText);
+//                    fromSearchView.getEditText().setText(recognizedText);
+//                    fromLocationSelected(recognizedText);
                 }
             }
 
@@ -291,6 +319,15 @@ public class GalleryFragment extends Fragment {
         }
     }
 
+    public void speakInstructions(String instruction){
+        if(textToSpeech != null){
+            Toast.makeText(requireContext(), "TTS Speaking", Toast.LENGTH_SHORT).show();
+            textToSpeech.speak(instruction, TextToSpeech.QUEUE_FLUSH, null, "Sample ID");
+        }else {
+            Toast.makeText(requireContext(), "TTS is null", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void createViewPager(View root, List<Vertex> path, List<String> instructions) {
 //        // create a viewpager2 object
 //        ViewPager2 viewPager2 = root.findViewById(R.id.viewPager);
@@ -347,6 +384,11 @@ public class GalleryFragment extends Fragment {
             speechRecognizer.destroy();
         }
         binding = null;
+
+        if(textToSpeech != null){
+            textToSpeech.stop();
+            textToSpeech.shutdown();
+        }
     }
 
 //    @Override
