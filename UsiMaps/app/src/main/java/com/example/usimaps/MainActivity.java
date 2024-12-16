@@ -1,13 +1,19 @@
 package com.example.usimaps;
 
 import android.Manifest;
+import android.content.ContentValues;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.View;
 import android.view.Menu;
 import android.widget.Toast;
 
+import com.example.usimaps.map.Graph;
+import com.example.usimaps.map.Vertex;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.navigation.NavigationView;
@@ -23,6 +29,11 @@ import androidx.core.app.ActivityCompat;
 import androidx.annotation.NonNull;
 
 import com.example.usimaps.databinding.ActivityMainBinding;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -56,6 +67,67 @@ public class MainActivity extends AppCompatActivity {
             getCameraPermission();
             getLocationPermission();
             getMicrophonePermission();
+        }
+
+
+        SharedPreferences prefs = getSharedPreferences(getPackageName() + "_preferences", MODE_PRIVATE);
+        if(!prefs.getBoolean("firstTime", false)) {
+            // store the usi map in the database
+            Graph graph = new Graph().generateUSIMap();
+            for (Vertex vertex : graph.getVertices()) {
+                String pictureName = vertex.getName()+".jpg";
+                InputStream inputStream = null;
+                try {
+                    try {
+                        inputStream = getAssets().open("pictures_usi/" + pictureName);
+                    } catch (IOException e) {
+                        inputStream = getAssets().open("pictures_usi/sectorA1.jpg");
+                        System.out.println("Picture not found for vertex " + vertex.getName() + ". Using default picture instead.");
+                    }
+                    // save the picture to the internal storage
+                    File file = new File(getFilesDir(), pictureName);
+                    // save the picture to the internal storage
+                    FileOutputStream outputStream = new FileOutputStream(file);
+                    byte[] buffer = new byte[1024];
+                    int read;
+                    while ((read = inputStream.read(buffer)) != -1) {
+                        outputStream.write(buffer, 0, read);
+                    }
+                    outputStream.close();
+                    inputStream.close();
+                    // update the vertex with the path to the picture
+                    vertex.setImagePath(file.getAbsolutePath());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            DatabaseHelper dbHelper = new DatabaseHelper(this);
+            SQLiteDatabase db = dbHelper.getWritableDatabase();
+            ContentValues values = new ContentValues();
+            String mapName = graph.getMapName();
+            byte[] bytegraph = Graph.serialize(graph);
+            values.put(DatabaseHelper.COLUMN_MAP_NAME, mapName);
+            values.put(DatabaseHelper.COLUMN_MAP_OBJECT, bytegraph);
+
+            // Check if the map already exists
+            String selection = DatabaseHelper.COLUMN_MAP_NAME + " = ?";
+            String[] selectionArgs = { mapName };
+
+            int count = db.update(DatabaseHelper.TABLE_MAPS, values, selection, selectionArgs);
+
+            // If the map does not exist, insert it
+            if (count == 0) {
+                db.insert(DatabaseHelper.TABLE_MAPS, null, values);
+            }
+
+            db.close();
+
+            // set first time to false
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putBoolean("firstTime", true);
+            editor.commit();
+
+            System.out.println("USI map stored in the database for the first time");
         }
     }
 

@@ -6,6 +6,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -32,12 +34,22 @@ import kotlin.Pair;
 public class Graph implements Serializable {
     // map of vertices to edges
     private Map<Vertex, Set<Edge>> map;
+    private String mapName;
 
     /**
      * Constructor for Graph
      */
     public Graph() {
         this.map = new HashMap<>();
+    }
+
+    public Graph(String mapName) {
+        this.map = new HashMap<>();
+        this.mapName = mapName;
+    }
+
+    public String getMapName() {
+        return mapName;
     }
 
     /**
@@ -161,6 +173,10 @@ public class Graph implements Serializable {
             }
 
             for (Edge e : map.get(current)) {
+                // ignore outside vertices
+                if (e.getDestination().getType() == VertexType.OUTSIDE && destination.getType() != VertexType.OUTSIDE) {
+                    continue;
+                }
                 double newDist = distance.get(current) + e.getWeight();
                 if (newDist < distance.get(e.getDestination())) {
                     distance.put(e.getDestination(), newDist);
@@ -351,6 +367,10 @@ public class Graph implements Serializable {
     }
 
     public double computeDistance(Vertex v1, Vertex v2) {
+        if (v1.getType() == VertexType.OUTSIDE || v2.getType() == VertexType.OUTSIDE) {
+            return 0;
+        }
+
         double x1 = v1.getLongitude();
         double y1 = v1.getLatitude();
         double x2 = v2.getLongitude();
@@ -439,7 +459,11 @@ public class Graph implements Serializable {
         }
 
         // add start instruction
-        instructions.add("Start at " + path.get(0).getName());
+        if (path.get(0).getType() == VertexType.OUTSIDE) {
+            instructions.add("Start outside");
+        } else {
+            instructions.add("Start at " + path.get(0).getName());
+        }
         simplifiedPath.add(path.get(0));
 
         int angle_threshold = 20;
@@ -495,6 +519,10 @@ public class Graph implements Serializable {
             }
 
             simplifiedPath.add(v2);
+            if (v3.getType() == VertexType.DOOR) {
+                // modify the instruction to include the door
+                instructions.set(instructions.size() - 1, instructions.get(instructions.size() - 1) + " through the door");
+            }
             System.out.println("->: " + instructions.get(instructions.size() - 1));
 
         }
@@ -578,7 +606,7 @@ public class Graph implements Serializable {
      * @return the graph representing the USI campus
      */
     public Graph generateUSIMap() {
-        Graph graph = new Graph();
+        Graph graph = new Graph("USI Campus EST");
         // create D corridor
         Vertex D0_CorridorEnd = new Vertex("Corridor D0", VertexType.CONNECTION, 46.012324, 8.961444, 0);
         Vertex D0_CorridorStart = new Vertex("Corridor D0", VertexType.CONNECTION, 46.011607, 8.961346, 0);
@@ -627,6 +655,15 @@ public class Graph implements Serializable {
         Vertex C1_04 = new Vertex("C1:04", VertexType.ROOM, 46.01239944086005, 8.961342661886274, 1);
         graph.connectVertexToEdgeByName(C1_04, "C1 Corridor");
 
+        Vertex Outside = new Vertex("Outside", VertexType.OUTSIDE, 46.0123761558387, 8.960759281466686, 0);
+        graph.addVertex(Outside);
+        // connect to every vertex of type door
+        for (Vertex v : graph.getVertices()) {
+            if (v.getType() == VertexType.DOOR) {
+                graph.addEdge(Outside, v, computeDistance(Outside, v), "Outside");
+            }
+        }
+
         return graph;
     }
 
@@ -656,13 +693,34 @@ public class Graph implements Serializable {
             e.printStackTrace();
             return false;
         }
-
-
     }
 
-//    private static void saveGraph(Graph graph, String filename) {
-//        // save the graph to a file
-//        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filename
+
+    public static byte[] serialize(Graph graph) {
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(baos);
+            oos.writeObject(graph);
+            byte[] employeeAsBytes = baos.toByteArray();
+            ByteArrayInputStream bais = new ByteArrayInputStream(employeeAsBytes);
+            return employeeAsBytes;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static Graph deserialize(byte[] data) {
+        try {
+            ByteArrayInputStream baip = new ByteArrayInputStream(data);
+            ObjectInputStream ois = new ObjectInputStream(baip);
+            return (Graph ) ois.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 }
 
 

@@ -69,6 +69,10 @@ public class Vertex implements Serializable {
         this.floor = floor;
     }
 
+    public void setImagePath(String imagepath) {
+        this.imagepath = imagepath;
+    }
+
 
     @Override
     public boolean equals(Object obj) {

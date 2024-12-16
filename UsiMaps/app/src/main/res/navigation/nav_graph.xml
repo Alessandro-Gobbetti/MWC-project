@@ -24,7 +24,20 @@
         android:id="@+id/nav_slideshow"
         android:name="com.example.usimaps.ui.slideshow.SlideshowFragment"
         android:label="@string/menu_slideshow"
-        tools:layout="@layout/fragment_slideshow" >
+        tools:layout="@layout/fragment_slideshow">
+        <action
+            android:id="@+id/action_slideshowFragment_to_galleryFragment"
+            app:destination="@id/nav_gallery"
+            app:popUpTo="@id/nav_gallery"
+            app:popUpToInclusive="true"/>
     </fragment>
+
+    <action
+        android:id="@+id/action_nav_home_to_nav_gallery"
+        app:destination="@id/nav_gallery"
+        app:enterAnim="@anim/nav_default_enter_anim"
+        app:exitAnim="@anim/nav_default_exit_anim"
+        app:popEnterAnim="@anim/nav_default_pop_enter_anim"
+        app:popExitAnim="@anim/nav_default_pop_exit_anim"/>
 
 </navigation>

@@ -134,17 +134,17 @@ public class ImageCaptureManager {
 
     // Save image metadata to database
     private void saveImageMetadata(String imagePath, double latitude, double longitude, float direction, long timestamp) {
-        ImageDatabaseHelper dbHelper = new ImageDatabaseHelper(context);
+        DatabaseHelper dbHelper = new DatabaseHelper(context);
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 
         ContentValues values = new ContentValues();
-        values.put(ImageDatabaseHelper.COLUMN_IMAGE_PATH, imagePath);
-        values.put(ImageDatabaseHelper.COLUMN_LATITUDE, latitude);
-        values.put(ImageDatabaseHelper.COLUMN_LONGITUDE, longitude);
-        values.put(ImageDatabaseHelper.COLUMN_DIRECTION, direction);
-        values.put(ImageDatabaseHelper.COLUMN_TIMESTAMP, timestamp);
+        values.put(DatabaseHelper.COLUMN_IMAGE_PATH, imagePath);
+        values.put(DatabaseHelper.COLUMN_LATITUDE, latitude);
+        values.put(DatabaseHelper.COLUMN_LONGITUDE, longitude);
+        values.put(DatabaseHelper.COLUMN_DIRECTION, direction);
+        values.put(DatabaseHelper.COLUMN_TIMESTAMP, timestamp);
 
-        long newRowId = db.insert(ImageDatabaseHelper.TABLE_IMAGES, null, values);
+        long newRowId = db.insert(DatabaseHelper.TABLE_IMAGES, null, values);
 
         if (newRowId == -1) {
             // Handle failure if necessary

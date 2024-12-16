@@ -1,7 +1,10 @@
 package com.example.usimaps.ui.gallery;
 
 import android.app.AlertDialog;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
@@ -21,6 +24,7 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.example.usimaps.DatabaseHelper;
 import com.example.usimaps.QRCodeScannerDialogFragment;
 import com.example.usimaps.R;
 import com.example.usimaps.RecyclerViewAdapter;
@@ -35,8 +39,11 @@ import com.google.android.material.search.SearchView;
 import com.example.usimaps.LocationAdapter;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
+
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -59,7 +66,7 @@ public class GalleryFragment extends Fragment {
     private List<String> locationSuggestions;
     private String selectedFromLocation, selectedToLocation;
 
-    private Graph graph = new Graph().generateUSIMap();
+    private Graph graph = new Graph();
 
     private List<Vertex> path = new ArrayList<>();
     private List<String> instructions = new ArrayList<>();
@@ -188,6 +195,17 @@ public class GalleryFragment extends Fragment {
         binding = FragmentGalleryBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
+//        byte[] bytegraph = Graph.serialize(graph);
+//        System.out.println("Bytegraph: " + Arrays.toString(bytegraph));
+//        Graph graph_read = Graph.deserialize(bytegraph);
+//        System.out.println("Graph read: " + graph_read);
+//        graph_read.print();
+//        System.out.println("______________");
+
+//        saveGraph();
+        this.graph = loadGraph("USI Campus EST");
+        System.out.println("LOAD______________");
+        System.out.println("Names: " + getMapNames());
         //
         fromSearchBar = binding.fromSearchBar;
         fromSearchView = binding.fromSearchView;
@@ -259,7 +277,36 @@ public class GalleryFragment extends Fragment {
             return false;
         });
 
+        // Retrieve the route data from the arguments
+        Bundle args = getArguments();
+        if (args != null) {
+            String start = args.getString("start");
+            String goal = args.getString("goal");
+            // set the search bars
+            fromSearchBar.setText(start);
+            toSearchBar.setText(goal);
+            // Display the route
+            checkLocationsSelected();
+        }
+
         return root;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Set the title
+        System.out.println("RESUMED");
+
+        Bundle args = getArguments();
+        if (args != null) {
+            String start = args.getString("start");
+            String goal = args.getString("goal");
+            // set the search bars
+            fromSearchBar.setText(start);
+            toSearchBar.setText(goal);
+        }
+        checkLocationsSelected();
     }
 
     //Speech Recognition
@@ -303,11 +350,13 @@ public class GalleryFragment extends Fragment {
                 }
             }
         }
+        System.out.println("Path updated with " + path.size() + " vertices");
 
         showEmptyPathMessage(path);
     }
 
     private void showEmptyPathMessage(List<Vertex> path) {
+        System.out.println("Path size: " + path.size() + " vertices" + path.isEmpty());
         if (path.isEmpty()) {
             binding.missingRouteIcon.setVisibility(View.VISIBLE);
             binding.emptyRouteText.setVisibility(View.VISIBLE);
@@ -373,8 +422,106 @@ public class GalleryFragment extends Fragment {
         this.instructions = pathInstructions.getSecond();
 
         updatePath();
+
+        // save in the history db
+        saveHistory(newStart, newEnd);
     }
 
+    private void saveHistory(String start, String end) {
+        // save the start and end locations in the history database
+         DatabaseHelper dbHelper = new DatabaseHelper(getContext());
+         SQLiteDatabase db = dbHelper.getWritableDatabase();
+         ContentValues values = new ContentValues();
+         // date
+         Date date = new Date();
+         // To get local formatting use getDateInstance(), getDateTimeInstance(), or getTimeInstance(), or use new SimpleDateFormat(String template, Locale locale
+         SimpleDateFormat formatter = (SimpleDateFormat) SimpleDateFormat.getDateInstance();
+         String strDate = formatter.format(date);
+         values.put(DatabaseHelper.COLUMN_DATE, strDate);
+         values.put(DatabaseHelper.COLUMN_START, start);
+         values.put(DatabaseHelper.COLUMN_GOAL, end);
+         long newRowId = db.insert(DatabaseHelper.TABLE_HISTORY, null, values);
+         db.close();
+    }
+
+    private void saveGraph() {
+        // save the graph in the database, if already exists, update
+        DatabaseHelper dbHelper = new DatabaseHelper(getContext());
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        String mapName = graph.getMapName();
+        byte[] bytegraph = Graph.serialize(graph);
+        values.put(DatabaseHelper.COLUMN_MAP_NAME, mapName);
+        values.put(DatabaseHelper.COLUMN_MAP_OBJECT, bytegraph);
+
+        // Check if the map already exists
+        String selection = DatabaseHelper.COLUMN_MAP_NAME + " = ?";
+        String[] selectionArgs = { mapName };
+
+        int count = db.update(DatabaseHelper.TABLE_MAPS, values, selection, selectionArgs);
+
+        // If the map does not exist, insert it
+        if (count == 0) {
+            db.insert(DatabaseHelper.TABLE_MAPS, null, values);
+        }
+
+        db.close();
+    }
+
+    private Graph loadGraph(String name) {
+        // load the graph from the database
+        DatabaseHelper dbHelper = new DatabaseHelper(getContext());
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        String[] projection = {
+                DatabaseHelper.COLUMN_MAP_NAME,
+                DatabaseHelper.COLUMN_MAP_OBJECT
+        };
+        String selection = DatabaseHelper.COLUMN_MAP_NAME + " = ?";
+        String[] selectionArgs = {name};
+        Cursor cursor = db.query(
+                DatabaseHelper.TABLE_MAPS,
+                projection,
+                selection,
+                selectionArgs,
+                null,
+                null,
+                null
+        );
+        Graph graph = null;
+        if (cursor.moveToNext()) {
+            byte[] bytegraph = cursor.getBlob(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_MAP_OBJECT));
+            graph = Graph.deserialize(bytegraph);
+        }
+        cursor.close();
+        db.close();
+        return graph;
+    }
+
+    public List<String> getMapNames() {
+        // get the names of the maps in the database
+        DatabaseHelper dbHelper = new DatabaseHelper(getContext());
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        String[] projection = {
+                DatabaseHelper.COLUMN_MAP_NAME
+        };
+        Cursor cursor = db.query(
+                DatabaseHelper.TABLE_MAPS,
+                projection,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+        List<String> mapNames = new ArrayList<>();
+        while (cursor.moveToNext()) {
+            String mapName = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_MAP_NAME));
+            mapNames.add(mapName);
+        }
+        cursor.close();
+        db.close();
+        return mapNames;
+    }
 
     @Override
     public void onDestroyView() {

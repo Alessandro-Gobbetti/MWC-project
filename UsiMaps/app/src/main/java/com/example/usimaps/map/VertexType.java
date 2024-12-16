@@ -2,5 +2,5 @@ package com.example.usimaps.map;
 
 public enum VertexType
 {
-    ROOM, CONNECTION, DOOR, STAIR, ELEVATOR
+    ROOM, CONNECTION, DOOR, STAIR, ELEVATOR, OUTSIDE
 }
