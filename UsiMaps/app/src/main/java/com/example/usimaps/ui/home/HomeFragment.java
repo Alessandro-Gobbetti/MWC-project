@@ -22,6 +22,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.usimaps.BuildConfig;
 import com.example.usimaps.ImageCaptureManager;
 import com.example.usimaps.LocationAdapter;
 import com.example.usimaps.databinding.FragmentHomeBinding;
@@ -34,6 +35,8 @@ import com.google.android.material.search.SearchBar;
 import com.google.android.material.search.SearchView;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 import com.google.android.material.textfield.TextInputEditText;
+
+import com.example.usimaps.BuildConfig;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -24,6 +24,7 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.example.usimaps.BuildConfig;
 import com.example.usimaps.DatabaseHelper;
 import com.example.usimaps.QRCodeScannerDialogFragment;
 import com.example.usimaps.R;
@@ -34,11 +35,18 @@ import com.example.usimaps.databinding.FragmentGalleryBinding;
 //import graph class from the map package
 import com.example.usimaps.map.Graph;
 import com.example.usimaps.map.Vertex;
+import com.google.ai.client.generativeai.GenerativeModel;
+import com.google.ai.client.generativeai.java.GenerativeModelFutures;
+import com.google.ai.client.generativeai.type.Content;
+import com.google.ai.client.generativeai.type.GenerateContentResponse;
 import com.google.android.material.search.SearchBar;
 import com.google.android.material.search.SearchView;
 import com.example.usimaps.LocationAdapter;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -51,6 +59,8 @@ import android.widget.Toast;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import kotlin.Pair;
 
@@ -78,6 +88,8 @@ public class GalleryFragment extends Fragment {
     private AlertDialog listeningDialog;
 
     private TextToSpeech textToSpeech;
+
+    private GenerativeModel gm;
     //
 
     @Override
@@ -163,6 +175,8 @@ public class GalleryFragment extends Fragment {
                     System.out.println("RECOGNIZED TEXT" + recognizedText);
                     Toast.makeText(requireContext(), recognizedText, Toast.LENGTH_SHORT).show();
 
+                    String resultLLM = getLLMOutput(gm,recognizedText);
+
 //                    fromSearchBar.setText(recognizedText);
 //                    fromSearchView.getEditText().setText(recognizedText);
 //                    fromLocationSelected(recognizedText);
@@ -185,6 +199,8 @@ public class GalleryFragment extends Fragment {
         speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
                 RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-US");// maybe put locale
+
+        gm = new GenerativeModel("gemini-1.5-flash", BuildConfig.apiKey);
     }
 
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -681,5 +697,41 @@ public class GalleryFragment extends Fragment {
     private void locationsSelected(String fromLocation, String toLocation) {
         // Handle the case when both locations are selected
         Toast.makeText(requireContext(), "Both locations selected", Toast.LENGTH_SHORT).show();
+    }
+
+    private String getLLMOutput(GenerativeModel gm, String audio){
+
+        GenerativeModelFutures model = GenerativeModelFutures.from(gm);
+
+        //TODO: Add prompt for lmm and then the audio input
+        String llmPrompt = "You are a helpful assistant tasked with extracting two locations from user input. The user will describe their current location (source) and the desired destination (target) in natural language. " +
+                "Extract the locations as follows: Source Location: The starting point described by the user. Destination Location: The endpoint described by the user. " +
+                "If the input is unclear, respond with 'Unable to determine locations'. Examples: Input: 'I want to go from Room A to Room B.' Output: Source Location: Room A, Destination Location: Room B " +
+                "Input: 'Take me from the library to the main hall.' Output: Source Location: Library, Destination Location: Main Hall Input: 'I'm starting at the cafeteria and heading to the science building.' " +
+                "Output: Source Location: Cafeteria, Destination Location: Science Building Input: 'I just want to go somewhere.' Output: Unable to determine locations.";
+
+        String llmInput = llmPrompt + "\nInput: '" + audio + "'\nOutput:";
+
+        Content content = new Content.Builder().addText(llmInput).build();
+        Executor executor = Executors.newSingleThreadExecutor();
+        ListenableFuture<GenerateContentResponse> response = model.generateContent(content);
+
+
+        Futures.addCallback(
+                response,
+                new FutureCallback<GenerateContentResponse>() {
+                    @Override
+                    public void onSuccess(GenerateContentResponse result) {
+                        String llmOutput = result.getText();
+                    }
+                    @Override
+                    public void onFailure(Throwable t) {
+                        t.printStackTrace();
+                        String llmOutput = t.getMessage();
+                    }
+                },
+                executor);
+
+        return null;
     }
 }
