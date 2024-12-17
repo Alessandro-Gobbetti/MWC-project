@@ -58,7 +58,7 @@ public class RouteHistoryListFragment extends Fragment {
             Bundle bundle = new Bundle();
             bundle.putString("start", item.getSecond());
             bundle.putString("goal", item.getThird());
-            Navigation.findNavController(root).navigate(R.id.nav_gallery, bundle);
+            Navigation.findNavController(root).navigate(R.id.action_slideshow_to_gallery, bundle);
         });
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         recyclerView.setAdapter(adapter);

@@ -25,6 +25,15 @@ public class Vertex implements Serializable {
 
     }
 
+    public Vertex(String name, VertexType type, double latitude, double longitude, int floor, String imagepath) {
+        this.name = name;
+        this.type = type;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.floor = floor;
+        this.imagepath = imagepath;
+    }
+
     public String getName() {
         return name;
     }

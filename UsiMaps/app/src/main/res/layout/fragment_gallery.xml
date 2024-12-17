@@ -150,6 +150,10 @@
         tools:layout_editor_absoluteX="0dp" />
 
 
+<!--    <include layout="@layout/fragment_route_list" android:id="@+id/route_list2"/>-->
+<!--    <include layout="@layout/fragment_navigation_cards" android:id="@+id/navigation_cards2"/>-->
+
+
     <!-- Empty Route text -->
 
 

@@ -1,8 +1,11 @@
 package com.example.usimaps;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteDatabase;
+
+import com.example.usimaps.map.Graph;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
@@ -74,5 +77,29 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_MAPS);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_HISTORY);
         onCreate(db);
+    }
+
+
+    public void updateGraph(Graph graph) {
+        // save the graph in the database, if already exists, update
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues values = new ContentValues();
+        String mapName = graph.getMapName();
+        byte[] bytegraph = Graph.serialize(graph);
+        values.put(DatabaseHelper.COLUMN_MAP_NAME, mapName);
+        values.put(DatabaseHelper.COLUMN_MAP_OBJECT, bytegraph);
+
+        // Check if the map already exists
+        String selection = DatabaseHelper.COLUMN_MAP_NAME + " = ?";
+        String[] selectionArgs = { mapName };
+
+        int count = db.update(DatabaseHelper.TABLE_MAPS, values, selection, selectionArgs);
+
+        // If the map does not exist, insert it
+        if (count == 0) {
+            db.insert(DatabaseHelper.TABLE_MAPS, null, values);
+        }
+
+        db.close();
     }
 }

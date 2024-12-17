@@ -22,11 +22,12 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.usimaps.BuildConfig;
+import com.example.usimaps.DatabaseHelper;
 import com.example.usimaps.ImageCaptureManager;
 import com.example.usimaps.LocationAdapter;
 import com.example.usimaps.databinding.FragmentHomeBinding;
 import com.example.usimaps.map.Graph;
+import com.example.usimaps.map.Vertex;
 import com.example.usimaps.map.VertexType;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.Chip;
@@ -71,6 +72,9 @@ public class HomeFragment extends Fragment {
     private ChipGroup chipGroupSelectedEdges;
 
     private String capturedImagePath = "";
+
+    private double latitude;
+    private double longitude;
 
 
     //TODO: Read graph from db
@@ -131,7 +135,7 @@ public class HomeFragment extends Fragment {
         ArrayAdapter<String> edgeAdapter = new ArrayAdapter<>(
                 requireContext(),
                 android.R.layout.simple_list_item_1,
-                getEdges()
+                getEdgeNames()
         );
         autoCompleteEdge.setAdapter(edgeAdapter);
 
@@ -195,6 +199,11 @@ public class HomeFragment extends Fragment {
                 binding.formContainer.setVisibility(View.VISIBLE);
                 selectedImageView.setImageURI(Uri.parse(imagePath));
                 selectedImageView.setVisibility(View.VISIBLE);
+
+                // Save the GPS coordinates
+                HomeFragment.this.latitude = latitude;
+                HomeFragment.this.longitude = longitude;
+
             }
 
             @Override
@@ -203,7 +212,7 @@ public class HomeFragment extends Fragment {
             }
         });
 
-        imageCaptureManager.startCamera();
+//        imageCaptureManager.startCamera();
 
         // Set initial visibility: show form, hide camera
         binding.formContainer.setVisibility(View.VISIBLE);
@@ -220,6 +229,9 @@ public class HomeFragment extends Fragment {
             // Hide form, show camera
             binding.formContainer.setVisibility(View.GONE);
             binding.cameraContainer.setVisibility(View.VISIBLE);
+
+            // Start the camera
+//            imageCaptureManager.startCamera();
         });
 
         // Handle returning to form
@@ -227,11 +239,17 @@ public class HomeFragment extends Fragment {
             // Hide camera, show form
             binding.cameraContainer.setVisibility(View.GONE);
             binding.formContainer.setVisibility(View.VISIBLE);
+
+            // Stop the camera
+//            imageCaptureManager.shutdown();
         });
 
         buttonSubmitForm.setOnClickListener(v -> submitForm());
 
-        binding.imageCaptureButton.setOnClickListener(v -> imageCaptureManager.takePhoto());
+        binding.imageCaptureButton.setOnClickListener(v -> {
+            imageCaptureManager.takePhoto();
+//            imageCaptureManager.shutdown();
+        });
 
         return root;
     }
@@ -263,7 +281,8 @@ public class HomeFragment extends Fragment {
             return;
         }
 
-        if (TextUtils.isEmpty(floor)) {
+        if (TextUtils.isEmpty(floor) || !getFloors().contains(floor)) {
+            // FIXME: Check if floor is valid before
             autoCompleteFloor.setError("Floor required");
             autoCompleteFloor.requestFocus();
             return;
@@ -290,27 +309,39 @@ public class HomeFragment extends Fragment {
         // TODO: If image was taken or selected, use that too
         // TODO: Save form data to db and update map.
         // TODO: use type too
+
+        int floorInt = graph.ordinalFloorToInt(floor);
+        VertexType vertexType = VertexType.valueOf(type);
+        // new Vertex("Corridor D0", VertexType.CONNECTION, 46.012324, 8.961444, 0);
+        Vertex vertex = new Vertex(name, vertexType, this.latitude, this.longitude, floorInt, capturedImagePath);
+        graph.addVertex(vertex);
+
+        for (String edgeName : selectedEdges) {
+            graph.connectVertexToEdgeByName(vertex, edgeName);
+        }
+
+        // Save the graph to the database
+        DatabaseHelper db = new DatabaseHelper(requireContext());
+        db.updateGraph(graph);
+
         Toast.makeText(requireContext(), "Form submitted: " + name, Toast.LENGTH_SHORT).show();
+        // Clear the form
+        clearForm();
     }
 
     //TODO: Update these getters with actual values from the map
-    private ArrayList<String> getEdges(){
-        ArrayList<String> arr = new ArrayList<>();
-        arr.add("Sector D");
-        arr.add("Sector C");
+    private List<String> getEdgeNames(){
+        List<String> arr = new ArrayList<>(graph.getEdgeNames());
         return arr;
     }
 
-    private ArrayList<String> getFloors(){
-        ArrayList<String> arr = new ArrayList<>();
-        arr.add("First floor");
-        arr.add("Ground level");
-        return arr;
+    private List<String> getFloors(){
+        return graph.getFloorNames();
     }
 
-    private ArrayList<String> getTypes(){
-        ArrayList<String> arr = new ArrayList<>();
-        for(VertexType c : VertexType. values())
+    private List<String> getTypes(){
+        List<String> arr = new ArrayList<>();
+        for(VertexType c : VertexType.values())
             arr.add(c.toString());
         return arr;
     }
@@ -320,11 +351,23 @@ public class HomeFragment extends Fragment {
         return allNames.contains(name);
     }
 
+    private void clearForm() {
+        editTextName.setText("");
+        autoCompleteFloor.setText("");
+        autoCompleteEdge.setText("");
+        autoCompleteType.setText("");
+        selectedEdges.clear();
+        chipGroupSelectedEdges.removeAllViews();
+        selectedImageView.setImageURI(null);
+        capturedImagePath = "";
+    }
+
     @Override
     public void onResume() {
         super.onResume();
         // Start listening for sensor updates
         imageCaptureManager.startListeningToDirection();
+        imageCaptureManager.startCamera();
     }
 
     @Override
@@ -332,6 +375,8 @@ public class HomeFragment extends Fragment {
         super.onPause();
         // Stop listening for sensor updates to save battery
         imageCaptureManager.stopListeningToDirection();
+        // Re-initialize the camera
+        imageCaptureManager.shutdown();
     }
 
     @Override

@@ -59,8 +59,10 @@ import android.widget.Toast;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeoutException;
 
 import kotlin.Pair;
 
@@ -176,6 +178,26 @@ public class GalleryFragment extends Fragment {
                     Toast.makeText(requireContext(), recognizedText, Toast.LENGTH_SHORT).show();
 
                     String resultLLM = getLLMOutput(gm,recognizedText);
+                    System.out.println("___LLM Output: " + resultLLM);
+
+                    // locations detected
+//                    if (resultLLM.contains("Source Location:") && resultLLM.contains("Destination Location:")) {
+//                        String[] parts = resultLLM.split("Source Location: ");
+//                        String source = parts[1].split(",")[0];
+//                        String destination = parts[1].split("Destination Location: ")[1].split(",")[0];
+//                        System.out.println("Source: " + source + " Destination: " + destination);
+//                        fromSearchBar.setText(source);
+//                        fromSearchView.getEditText().setText(source);
+//                        fromLocationSelected(source);
+//                        toSearchBar.setText(destination);
+//                        toSearchView.getEditText().setText(destination);
+//                        toLocationSelected(destination);
+//                    } else {
+//                        // speak the output
+//                        speakInstructions(resultLLM);
+//                        // query again
+//                        startVoiceInput();
+//                    }
 
 //                    fromSearchBar.setText(recognizedText);
 //                    fromSearchView.getEditText().setText(recognizedText);
@@ -219,8 +241,13 @@ public class GalleryFragment extends Fragment {
 //        System.out.println("______________");
 
 //        saveGraph();
-        this.graph = loadGraph("USI Campus EST");
-        //this.graph = graph.generateUSIMap();
+        Graph loadedGraph = loadGraph("USI Campus EST");
+        if (loadedGraph != null) {
+            this.graph = loadedGraph;
+            System.out.println("Graph loaded: " + graph.getMapName());
+        } else {
+            this.graph = graph.generateUSIMap();
+        }
         System.out.println("LOAD______________");
         System.out.println("Names: " + getMapNames());
         //
@@ -234,24 +261,28 @@ public class GalleryFragment extends Fragment {
 
 
         viewPager = binding.NavRouteViewPager;
-        viewPager.setAdapter(new FragmentStateAdapter(this) {
-
-            @NonNull
-            @Override
-            public Fragment createFragment(int position) {
-                if (position == 0) {
-                    return new RouteListFragment();
-                } else {
-                    return new NavigationCardsFragment();
-                }
-            }
-
-            @Override
-            public int getItemCount() {
-                return 2;
-            }
-
-        });
+        viewPager.setAdapter(new NavRouteAdapter(this));
+//        viewPager.setAdapter(new FragmentStateAdapter(this) {
+//
+////            RouteListFragment routeListFragment = new RouteListFragment();
+////            NavigationCardsFragment navigationCardsFragment = new NavigationCardsFragment();
+//
+//            @NonNull
+//            @Override
+//            public Fragment createFragment(int position) {
+//                if (position == 0) {
+//                    return new RouteListFragment();
+//                } else {
+//                    return new NavigationCardsFragment();
+//                }
+//            }
+//
+//            @Override
+//            public int getItemCount() {
+//                return 2;
+//            }
+//
+//        });
 
         // disable swipe
         viewPager.setUserInputEnabled(false);
@@ -295,16 +326,16 @@ public class GalleryFragment extends Fragment {
         });
 
         // Retrieve the route data from the arguments
-        Bundle args = getArguments();
-        if (args != null) {
-            String start = args.getString("start");
-            String goal = args.getString("goal");
-            // set the search bars
-            fromSearchBar.setText(start);
-            toSearchBar.setText(goal);
-            // Display the route
-            checkLocationsSelected();
-        }
+//        Bundle args = getArguments();
+//        if (args != null) {
+//            String start = args.getString("start");
+//            String goal = args.getString("goal");
+//            // set the search bars
+//            fromSearchBar.setText(start);
+//            toSearchBar.setText(goal);
+//            // Display the route
+//            checkLocationsSelected();
+//        }
 
         return root;
     }
@@ -315,6 +346,7 @@ public class GalleryFragment extends Fragment {
         // Set the title
         System.out.println("RESUMED");
 
+
         Bundle args = getArguments();
         if (args != null) {
             String start = args.getString("start");
@@ -323,7 +355,7 @@ public class GalleryFragment extends Fragment {
             fromSearchBar.setText(start);
             toSearchBar.setText(goal);
         }
-        checkLocationsSelected();
+        checkLocationsSelected(false);
     }
 
     //Speech Recognition
@@ -355,15 +387,33 @@ public class GalleryFragment extends Fragment {
     }
 
     private void updatePath() {
+
         // create a viewpager2 object
         FragmentStateAdapter adapter = (FragmentStateAdapter) this.viewPager.getAdapter();
+        System.out.println("||||||Adapter: " + adapter);
         if (adapter != null) {
+            System.out.println("||||||Adapter count: " + adapter.getItemCount());
+            List<Fragment> all_children = getChildFragmentManager().getFragments();
+            System.out.println("||||||All children: " + all_children.size());
+            for (Fragment child : all_children) {
+                System.out.println("||||||Child: " + child + " Type: " + child.getClass() + " Tag: " + child.getTag());
+            }
+
+
             for (int i = 0; i < adapter.getItemCount(); i++) {
                 Fragment fragment = getChildFragmentManager().findFragmentByTag("f" + i);
+
+
+
+                System.out.println("||||||Fragment: " + fragment);
                 if (fragment instanceof RouteListFragment) {
+                    System.out.println("||||||Updating RouteListFragment");
                     ((RouteListFragment) fragment).updatePath(path, instructions);
                 } else if (fragment instanceof NavigationCardsFragment) {
+                    System.out.println("||||||Updating NavigationCardsFragment");
                     ((NavigationCardsFragment) fragment).updatePath(path, instructions);
+                } else {
+                    System.out.println("||||||Fragment not found");
                 }
             }
         }
@@ -373,7 +423,7 @@ public class GalleryFragment extends Fragment {
     }
 
     private void showEmptyPathMessage(List<Vertex> path) {
-        System.out.println("Path size: " + path.size() + " vertices" + path.isEmpty());
+        System.out.println("Path size: " + path.size() + " vertices " + path.isEmpty());
         if (path.isEmpty()) {
             binding.missingRouteIcon.setVisibility(View.VISIBLE);
             binding.emptyRouteText.setVisibility(View.VISIBLE);
@@ -387,10 +437,10 @@ public class GalleryFragment extends Fragment {
 
     public void speakInstructions(String instruction){
         if(textToSpeech != null){
-            Toast.makeText(requireContext(), "TTS Speaking", Toast.LENGTH_SHORT).show();
+//            Toast.makeText(requireContext(), "TTS Speaking", Toast.LENGTH_SHORT).show();
             textToSpeech.speak(instruction, TextToSpeech.QUEUE_FLUSH, null, "Sample ID");
         }else {
-            Toast.makeText(requireContext(), "TTS is null", Toast.LENGTH_SHORT).show();
+//            Toast.makeText(requireContext(), "TTS is null", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -428,6 +478,10 @@ public class GalleryFragment extends Fragment {
     }
 
     public void updateRoute(String newStart, String newEnd) {
+        updateRoute(newStart, newEnd, true);
+    }
+
+    public void updateRoute(String newStart, String newEnd, boolean saveHistory) {
         Vertex startVertex = this.graph.getVertexByName(newStart);
         Vertex endVertex = graph.getVertexByName(newEnd);
 
@@ -441,7 +495,8 @@ public class GalleryFragment extends Fragment {
         updatePath();
 
         // save in the history db
-        saveHistory(newStart, newEnd);
+        if (saveHistory)
+            saveHistory(newStart, newEnd);
     }
 
     private void saveHistory(String start, String end) {
@@ -684,11 +739,15 @@ public class GalleryFragment extends Fragment {
     }
 
     private void checkLocationsSelected() {
+        checkLocationsSelected(true);
+    }
+
+    private void checkLocationsSelected(boolean saveHistory) {
         String fromLocation = fromSearchBar.getText().toString();
         String toLocation = toSearchBar.getText().toString();
         if (!fromLocation.isEmpty() && !toLocation.isEmpty()) {
             // Both locations are selected
-            updateRoute(fromLocation, toLocation);
+            updateRoute(fromLocation, toLocation, saveHistory);
 
             locationsSelected(fromLocation, toLocation);
         }
@@ -704,18 +763,36 @@ public class GalleryFragment extends Fragment {
         GenerativeModelFutures model = GenerativeModelFutures.from(gm);
 
         //TODO: Add prompt for lmm and then the audio input
-        String llmPrompt = "You are a helpful assistant tasked with extracting two locations from user input. The user will describe their current location (source) and the desired destination (target) in natural language. " +
-                "Extract the locations as follows: Source Location: The starting point described by the user. Destination Location: The endpoint described by the user. " +
-                "If the input is unclear, respond with 'Unable to determine locations'. Examples: Input: 'I want to go from Room A to Room B.' Output: Source Location: Room A, Destination Location: Room B " +
+        String prompt = "You are an AI assistant on a indoor navigation app. You are tasked with extracting the user current position and destination from a user input. " +
+                "The user will describe their current location (source) and the desired destination (target) in natural language. " +
+                "The possible locations are: ";
+        for (String location : graph.getSearchableNames()) {
+            prompt += location + ", ";
+        }
+        prompt = prompt.substring(0, prompt.length() - 2) + ". " +
+                "Keep interacting with the user until you have extracted both locations. " +
+                "If the input is unclear, investigate further by asking questions. " +
+                "Once you have extracted both locations, respond only and only with 'Source Location: <source>, Destination Location: <destination>'." +
+                "\nExamples: Input: 'I want to go from Room A to Room B.' Output: Source Location: Room A, Destination Location: Room B " +
                 "Input: 'Take me from the library to the main hall.' Output: Source Location: Library, Destination Location: Main Hall Input: 'I'm starting at the cafeteria and heading to the science building.' " +
                 "Output: Source Location: Cafeteria, Destination Location: Science Building Input: 'I just want to go somewhere.' Output: Unable to determine locations.";
 
-        String llmInput = llmPrompt + "\nInput: '" + audio + "'\nOutput:";
+        prompt += "\nInput: '" + audio + "'\nOutput:";
+//        String llmPrompt = "You are a helpful assistant tasked with extracting two locations from user input. The user will describe their current location (source) and the desired destination (target) in natural language. " +
+//                "Extract the locations as follows: Source Location: The starting point described by the user. Destination Location: The endpoint described by the user. " +
+//                "If the input is unclear, respond with 'Unable to determine locations'. Examples: Input: 'I want to go from Room A to Room B.' Output: Source Location: Room A, Destination Location: Room B " +
+//                "Input: 'Take me from the library to the main hall.' Output: Source Location: Library, Destination Location: Main Hall Input: 'I'm starting at the cafeteria and heading to the science building.' " +
+//                "Output: Source Location: Cafeteria, Destination Location: Science Building Input: 'I just want to go somewhere.' Output: Unable to determine locations.";
 
-        Content content = new Content.Builder().addText(llmInput).build();
+//        String llmInput = llmPrompt + "\nInput: '" + audio + "'\nOutput:";
+
+        Content content = new Content.Builder().addText(prompt).build();
         Executor executor = Executors.newSingleThreadExecutor();
         ListenableFuture<GenerateContentResponse> response = model.generateContent(content);
 
+//        String llmOutput = "";
+
+        CompletableFuture<String> future = new CompletableFuture<>();
 
         Futures.addCallback(
                 response,
@@ -723,15 +800,31 @@ public class GalleryFragment extends Fragment {
                     @Override
                     public void onSuccess(GenerateContentResponse result) {
                         String llmOutput = result.getText();
+                        System.out.println("LLM Output: " + llmOutput);
+                        future.complete("ASD" + llmOutput);
+//                        Toast.makeText(requireContext(), llmOutput, Toast.LENGTH_SHORT).show();
                     }
                     @Override
                     public void onFailure(Throwable t) {
                         t.printStackTrace();
                         String llmOutput = t.getMessage();
+                        future.completeExceptionally(t);
                     }
                 },
                 executor);
 
-        return null;
+        try {
+            String res = future.get(30, java.util.concurrent.TimeUnit.SECONDS);
+            System.out.println("SUCCESS LLM Output: " + res);
+            return res;
+
+        } catch (TimeoutException e) {
+            System.out.println("Timeout: " + e.getMessage());
+            return "Timeout: " + e.getMessage();
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+            e.printStackTrace();
+            return "Error: " + e.getMessage();
+        }
     }
 }

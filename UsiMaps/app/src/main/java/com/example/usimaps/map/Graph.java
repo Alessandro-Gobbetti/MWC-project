@@ -110,6 +110,36 @@ public class Graph implements Serializable {
         return map.get(v);
     }
 
+    public List<String> getFloorNames() {
+        Set<String> floorNames = new HashSet<>();
+        for (Vertex v : map.keySet()) {
+            floorNames.add(ordinal(v.getFloor()));
+        }
+        return new ArrayList<>(floorNames);
+    }
+
+
+
+    /**
+     * Get the edges of the graph
+     * @return the set of edges
+     */
+    public Set<Edge> getEdges() {
+        Set<Edge> edges = new HashSet<>();
+        for (Vertex v : map.keySet()) {
+            edges.addAll(map.get(v));
+        }
+        return edges;
+    }
+
+    public Set<String> getEdgeNames() {
+        Set<String> edgeNames = new HashSet<>();
+        for (Edge e : getEdges()) {
+            edgeNames.add(e.getName());
+        }
+        return edgeNames;
+    }
+
     /**
      * Get the vertices of the graph
      * @return the list of vertices
@@ -280,7 +310,7 @@ public class Graph implements Serializable {
         List<Edge> edges = new ArrayList<>();
         for (Vertex vertex : map.keySet()) {
             for (Edge edge : map.get(vertex)) {
-                if (edge.getName().equals(edgeName) && !edges.contains(edge) && edge.getDestination().getFloor() == v.getFloor() && edge.getSource().getFloor() == v.getFloor()) {
+                if (edge.getName().equals(edgeName) && !edges.contains(edge)) {
                     edges.add(edge);
                 }
             }
@@ -598,6 +628,22 @@ public class Graph implements Serializable {
         } else {
             return i + "th";
         }
+    }
+
+    public int ordinalFloorToInt(String floor) {
+        if (floor.equals("Ground")) {
+            return 0;
+        }
+        if (floor.endsWith("st")) {
+            return Integer.parseInt(floor.substring(0, floor.length() - 2));
+        }
+        if (floor.endsWith("nd")) {
+            return Integer.parseInt(floor.substring(0, floor.length() - 2));
+        }
+        if (floor.endsWith("rd")) {
+            return Integer.parseInt(floor.substring(0, floor.length() - 2));
+        }
+        return Integer.parseInt(floor.substring(0, floor.length() - 2));
     }
 
 
