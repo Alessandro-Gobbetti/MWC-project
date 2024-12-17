@@ -204,6 +204,7 @@ public class GalleryFragment extends Fragment {
 
 //        saveGraph();
         this.graph = loadGraph("USI Campus EST");
+        //this.graph = graph.generateUSIMap();
         System.out.println("LOAD______________");
         System.out.println("Names: " + getMapNames());
         //

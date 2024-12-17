@@ -6,10 +6,12 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
 
+import android.speech.tts.TextToSpeech;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.Toast;
 
 import com.example.usimaps.R;
 import com.example.usimaps.ViewPagerAdapter;
@@ -20,6 +22,7 @@ import com.google.android.material.tabs.TabLayoutMediator;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -35,6 +38,8 @@ public class NavigationCardsFragment extends Fragment {
     private ViewPager2 viewPager2;
     private TabLayout tabLayout;
     private ViewPagerAdapter adapter;
+
+    private TextToSpeech textToSpeech;
     
     public NavigationCardsFragment() {
         // Required empty public constructor
@@ -42,7 +47,7 @@ public class NavigationCardsFragment extends Fragment {
         this.instructions = new ArrayList<>();
     }
 
-
+    // TODO: Improve how parameters are passed, use Bundle instead
     public NavigationCardsFragment(List<Vertex> path, List<String> instructions) {
         this.path = path;
         this.instructions = instructions;
@@ -65,10 +70,46 @@ public class NavigationCardsFragment extends Fragment {
                 (tab, position) -> {}
         ).attach();
 
+        textToSpeech = new TextToSpeech(requireContext(), status -> {
+            if (status == TextToSpeech.SUCCESS) {
+                // Set language
+                int result = textToSpeech.setLanguage(Locale.getDefault());
+                if (result == TextToSpeech.LANG_MISSING_DATA ||
+                        result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                    Toast.makeText(requireContext(), "TTS language not supported", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(requireContext(), "TTS OKAY", Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                Toast.makeText(requireContext(), "TTS initialization failed", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        viewPager2.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                super.onPageSelected(position);
+                if (position >= 0 && position < instructions.size()) {
+                    String instruction = instructions.get(position);
+                    speakInstruction(instruction);
+                }
+            }
+        });
+
+
+
+
         // set the button listeners
 //        setButtonListeners(root, viewPager2);
 
         return root;
+    }
+
+    private void speakInstruction(String instruction) {
+        //TODO: Think about the second part of this condition
+        if (textToSpeech != null && !textToSpeech.isSpeaking()) {
+            textToSpeech.speak(instruction, TextToSpeech.QUEUE_FLUSH, null, null);
+        }
     }
 
     public void updatePath(List<Vertex> path, List<String> instructions) {
@@ -84,10 +125,11 @@ public class NavigationCardsFragment extends Fragment {
         ).attach();
     }
 
-
-
+    @Override
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
+        textToSpeech.stop();
+        textToSpeech.shutdown();
     }
 }

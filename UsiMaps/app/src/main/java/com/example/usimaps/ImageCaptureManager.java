@@ -37,7 +37,8 @@ public class ImageCaptureManager {
     private ProcessCameraProvider cameraProvider;
 
     public interface ImageCaptureListener {
-        void onImageCaptured(String imagePath);
+        void onImageCaptured(String imagePath, double latitude, double longitude,
+                             float direction, long timestamp);
         void onError(Exception exception);
     }
 
@@ -110,7 +111,7 @@ public class ImageCaptureManager {
             saveImageMetadata(imagePath, latitude, longitude, direction, timestamp);
 
             if (imageCaptureListener != null) {
-                imageCaptureListener.onImageCaptured(imagePath);
+                imageCaptureListener.onImageCaptured(imagePath, latitude, longitude, direction, timestamp);
             }
         });
     }
