@@ -65,44 +65,9 @@ public class SlideshowFragment extends Fragment {
             missingHistoryText.setVisibility(View.GONE);
         }
 
-
-        ttsButton = binding.TTSButton;
-        textToSpeech = new TextToSpeech(requireContext(), new TextToSpeech.OnInitListener() {
-            @Override
-            public void onInit(int status) {
-                if (status == TextToSpeech.SUCCESS) {
-                    // Set language
-                    int result = textToSpeech.setLanguage(Locale.getDefault());
-                    if (result == TextToSpeech.LANG_MISSING_DATA ||
-                            result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                        Toast.makeText(requireContext(), "TTS language not supported", Toast.LENGTH_SHORT).show();
-                    } else {
-                        // TTS is ready, set up the button listener
-                        ttsButton.setOnClickListener(v -> {
-                            // Speak out the instruction
-                            String instruction = "Turn left in 100 meters onto Main Street.";
-                            speakInstructions("Testing speech");
-                        });
-                        Toast.makeText(requireContext(), "TTS OKAY", Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    Toast.makeText(requireContext(), "TTS initialization failed", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-
-
         return root;
     }
 
-    public void speakInstructions(String instruction){
-        if(textToSpeech != null){
-            Toast.makeText(requireContext(), "TTS Speaking", Toast.LENGTH_SHORT).show();
-            textToSpeech.speak(instruction.trim(), TextToSpeech.QUEUE_FLUSH, null, "Sample ID");
-        }else {
-            Toast.makeText(requireContext(), "TTS is null", Toast.LENGTH_SHORT).show();
-        }
-    }
 
     @Override
     public void onDestroyView() {
