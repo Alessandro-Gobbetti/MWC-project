@@ -49,6 +49,7 @@ public class InstructionCardFragment extends Fragment {
 
 
         // load image from file path
+        System.out.println("imgPath: " + imgPath);
         File imgFile = new File(imgPath);
         if(imgFile.exists()){
             binding.instructionImage.setImageURI(Uri.parse(imgPath));

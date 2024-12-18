@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
@@ -57,6 +59,8 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.widget.Toast;
 
+import org.reactivestreams.Publisher;
+
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
@@ -93,6 +97,8 @@ public class GalleryFragment extends Fragment {
 
     private GenerativeModel gm;
     //
+
+    private String llmprompt;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -177,8 +183,9 @@ public class GalleryFragment extends Fragment {
                     System.out.println("RECOGNIZED TEXT" + recognizedText);
                     Toast.makeText(requireContext(), recognizedText, Toast.LENGTH_SHORT).show();
 
-                    String resultLLM = getLLMOutput(gm,recognizedText);
-                    System.out.println("___LLM Output: " + resultLLM);
+                    ListenableFuture<GenerateContentResponse> response = getLLMOutput(gm, recognizedText);
+                    // wait for the response
+
 
                     // locations detected
 //                    if (resultLLM.contains("Source Location:") && resultLLM.contains("Destination Location:")) {
@@ -336,6 +343,9 @@ public class GalleryFragment extends Fragment {
 //            // Display the route
 //            checkLocationsSelected();
 //        }
+
+
+        this.resetLLMPrompt();
 
         return root;
     }
@@ -610,6 +620,25 @@ public class GalleryFragment extends Fragment {
         }
     }
 
+    public void resetLLMPrompt(){
+        llmprompt = "You are an AI assistant on a indoor navigation app. You are tasked with extracting the user current position and destination from a user input. " +
+                "The user will describe their current location (source) and the desired destination (target) in natural language. " +
+                "The possible locations are: ";
+        for (String location : graph.getSearchableNames()) {
+            llmprompt += location + ", ";
+        }
+        llmprompt = llmprompt.substring(0, llmprompt.length() - 2) + ". " +
+                "Keep interacting with the user until you have extracted both locations. " +
+                "If the input is unclear, investigate further by asking questions. " +
+                "Once you have extracted both locations, respond only and only with 'Source Location: <source>, Destination Location: <destination>'." +
+                "\nExamples: Input: 'I want to go from Room A to Room B.' Output: Source Location: Room A, Destination Location: Room B " +
+                "Input: 'Take me from the library to the main hall.' Output: Source Location: Library, Destination Location: Main Hall Input: 'I'm starting at the cafeteria and heading to the science building.' " +
+                "Output: Source Location: Cafeteria, Destination Location: Science Building Input: 'I just want to go somewhere.' Output: Unable to determine locations.";
+
+        llmprompt += "\nPREVIOUS CONVERSATION:\n";
+
+    }
+
 //    @Override
 //    public void onSaveInstanceState(@NonNull Bundle outState) {
 //        super.onSaveInstanceState(outState);
@@ -758,26 +787,13 @@ public class GalleryFragment extends Fragment {
         Toast.makeText(requireContext(), "Both locations selected", Toast.LENGTH_SHORT).show();
     }
 
-    private String getLLMOutput(GenerativeModel gm, String audio){
+    private ListenableFuture<GenerateContentResponse> getLLMOutput(GenerativeModel gm, String audio){
 
         GenerativeModelFutures model = GenerativeModelFutures.from(gm);
 
         //TODO: Add prompt for lmm and then the audio input
-        String prompt = "You are an AI assistant on a indoor navigation app. You are tasked with extracting the user current position and destination from a user input. " +
-                "The user will describe their current location (source) and the desired destination (target) in natural language. " +
-                "The possible locations are: ";
-        for (String location : graph.getSearchableNames()) {
-            prompt += location + ", ";
-        }
-        prompt = prompt.substring(0, prompt.length() - 2) + ". " +
-                "Keep interacting with the user until you have extracted both locations. " +
-                "If the input is unclear, investigate further by asking questions. " +
-                "Once you have extracted both locations, respond only and only with 'Source Location: <source>, Destination Location: <destination>'." +
-                "\nExamples: Input: 'I want to go from Room A to Room B.' Output: Source Location: Room A, Destination Location: Room B " +
-                "Input: 'Take me from the library to the main hall.' Output: Source Location: Library, Destination Location: Main Hall Input: 'I'm starting at the cafeteria and heading to the science building.' " +
-                "Output: Source Location: Cafeteria, Destination Location: Science Building Input: 'I just want to go somewhere.' Output: Unable to determine locations.";
 
-        prompt += "\nInput: '" + audio + "'\nOutput:";
+        llmprompt += "\nInput: '" + audio;
 //        String llmPrompt = "You are a helpful assistant tasked with extracting two locations from user input. The user will describe their current location (source) and the desired destination (target) in natural language. " +
 //                "Extract the locations as follows: Source Location: The starting point described by the user. Destination Location: The endpoint described by the user. " +
 //                "If the input is unclear, respond with 'Unable to determine locations'. Examples: Input: 'I want to go from Room A to Room B.' Output: Source Location: Room A, Destination Location: Room B " +
@@ -786,13 +802,12 @@ public class GalleryFragment extends Fragment {
 
 //        String llmInput = llmPrompt + "\nInput: '" + audio + "'\nOutput:";
 
-        Content content = new Content.Builder().addText(prompt).build();
+        Content content = new Content.Builder().addText(llmprompt).build();
+
+
         Executor executor = Executors.newSingleThreadExecutor();
         ListenableFuture<GenerateContentResponse> response = model.generateContent(content);
 
-//        String llmOutput = "";
-
-        CompletableFuture<String> future = new CompletableFuture<>();
 
         Futures.addCallback(
                 response,
@@ -801,30 +816,65 @@ public class GalleryFragment extends Fragment {
                     public void onSuccess(GenerateContentResponse result) {
                         String llmOutput = result.getText();
                         System.out.println("LLM Output: " + llmOutput);
-                        future.complete("ASD" + llmOutput);
 //                        Toast.makeText(requireContext(), llmOutput, Toast.LENGTH_SHORT).show();
+
+
+                        // Post the task back to the main thread
+                        new Handler(Looper.getMainLooper()).post(() -> {
+                            // Run the response again on the main thread
+//                            speakInstructions(llmOutput);
+                            llmprompt += "\nOutput: '" + llmOutput;
+
+                            if (llmOutput.contains("Source Location:") && llmOutput.contains("Destination Location:")) {
+                                String[] parts = llmOutput.split("Source Location: ");
+                                String source = parts[1].split(",")[0];
+                                String destination = parts[1].split("Destination Location: ")[1].split(",")[0];
+                                System.out.println("Source: " + source + " Destination: " + destination);
+
+                                // trim source and destination
+                                source = source.trim();
+                                destination = destination.trim();
+                                // double check if the locations are valid
+                                if (!locationSuggestions.contains(source) || !locationSuggestions.contains(destination)) {
+                                    for (String location : locationSuggestions) {
+                                        System.out.println(location);
+                                    }
+                                    Toast.makeText(requireContext(), "Invalid locations", Toast.LENGTH_SHORT).show();
+                                    return;
+                                }
+
+                                fromSearchBar.setText(source);
+                                fromSearchView.getEditText().setText(source);
+                                fromLocationSelected(source);
+                                toSearchBar.setText(destination);
+                                toSearchView.getEditText().setText(destination);
+                                toLocationSelected(destination);
+                                resetLLMPrompt();
+                            } else {
+                                // speak the output
+                                speakInstructions(llmOutput);
+
+                                // wait till the speech is done
+                                while(textToSpeech.isSpeaking()){
+                                    // wait
+                                }
+                                // query again
+                                startVoiceInput();
+                            }
+
+                        });
                     }
+
+
+
                     @Override
                     public void onFailure(Throwable t) {
                         t.printStackTrace();
                         String llmOutput = t.getMessage();
-                        future.completeExceptionally(t);
                     }
                 },
                 executor);
 
-        try {
-            String res = future.get(30, java.util.concurrent.TimeUnit.SECONDS);
-            System.out.println("SUCCESS LLM Output: " + res);
-            return res;
-
-        } catch (TimeoutException e) {
-            System.out.println("Timeout: " + e.getMessage());
-            return "Timeout: " + e.getMessage();
-        } catch (Exception e) {
-            System.out.println("Error: " + e.getMessage());
-            e.printStackTrace();
-            return "Error: " + e.getMessage();
-        }
+        return response;
     }
 }

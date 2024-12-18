@@ -280,7 +280,7 @@ public class Graph implements Serializable {
         double y = y1 + u * (y2 - y1);
 
         // create new connection vertex lying on the edge
-        Vertex connectionVertex = new Vertex(e.getName().toUpperCase() + "-" + v.getName(), VertexType.CONNECTION, x, y, v.getFloor());
+        Vertex connectionVertex = new Vertex(e.getName() + "-" + v.getName(), VertexType.CONNECTION, x, y, v.getFloor());
         addVertex(connectionVertex);
 
         // compute the new weights
@@ -658,21 +658,21 @@ public class Graph implements Serializable {
         Vertex D0_CorridorStart = new Vertex("Corridor D0", VertexType.CONNECTION, 46.011607, 8.961346, 0);
         graph.addVertex(D0_CorridorEnd);
         graph.addVertex(D0_CorridorStart);
-        graph.addEdge(D0_CorridorStart, D0_CorridorEnd, computeDistance(D0_CorridorStart, D0_CorridorEnd), "D Corridor");
+        graph.addEdge(D0_CorridorStart, D0_CorridorEnd, computeDistance(D0_CorridorStart, D0_CorridorEnd), "Corridor D0");
 
         Vertex D_Door = new Vertex("Door1 Sector D", VertexType.DOOR, 46.011951, 8.961339, 0);
         Vertex D_Door2 = new Vertex("Door2 Sector D", VertexType.DOOR, 46.011815, 8.961308, 0);
         Vertex Stairs_base = new Vertex("Stairs D Base", VertexType.STAIR, 46.011997, 8.961422, 0);
         Vertex Stairs_top = new Vertex("Stairs D Top", VertexType.STAIR, 46.012081,8.961436, 1);
 
-        Vertex D002 = new Vertex("D0:02", VertexType.ROOM, 46.012090, 8.961486, 0);
-        Vertex D004 = new Vertex("D0:04", VertexType.ROOM, 46.011884, 8.961442, 0);
+        Vertex D002 = new Vertex("D0.02", VertexType.ROOM, 46.012090, 8.961486, 0);
+        Vertex D004 = new Vertex("D0.04", VertexType.ROOM, 46.011884, 8.961442, 0);
 
-        graph.connectVertexToEdgeByName(D_Door, "D Corridor");
-        graph.connectVertexToEdgeByName(D_Door2, "D Corridor");
-        graph.connectVertexToEdgeByName(D002, "D Corridor");
-        graph.connectVertexToEdgeByName(D004, "D Corridor");
-        graph.connectVertexToEdgeByName(Stairs_base, "D Corridor");
+        graph.connectVertexToEdgeByName(D_Door, "Corridor D0");
+        graph.connectVertexToEdgeByName(D_Door2, "Corridor D0");
+        graph.connectVertexToEdgeByName(D002, "Corridor D0");
+        graph.connectVertexToEdgeByName(D004, "Corridor D0");
+        graph.connectVertexToEdgeByName(Stairs_base, "Corridor D0");
 
         graph.addVertex(Stairs_top);
         graph.addEdge(Stairs_top, Stairs_base, computeDistance(Stairs_top, Stairs_base), "Stairs D");
@@ -688,7 +688,7 @@ public class Graph implements Serializable {
         // connect to stairs
         graph.connectVertexToEdgeByName(Stairs_top, "D1 Corridor");
 
-        Vertex D115 = new Vertex("D1:15", VertexType.ROOM, 46.011589, 8.961352, 1);
+        Vertex D115 = new Vertex("D1.15", VertexType.ROOM, 46.011589, 8.961352, 1);
         graph.connectVertexToEdgeByName(D115, "D1 Corridor");
 
         // corridor C1
@@ -696,9 +696,9 @@ public class Graph implements Serializable {
         graph.addVertex(C1_CorridorEnd);
         graph.addEdge(D1_CorridorEnd, C1_CorridorEnd, computeDistance(D1_CorridorEnd, C1_CorridorEnd), "C1 Corridor");
 
-        Vertex C1_03 = new Vertex("C1:03", VertexType.ROOM, 46.01239944086005, 8.961342661886274, 1);
+        Vertex C1_03 = new Vertex("C1.03", VertexType.ROOM, 46.01239944086005, 8.961342661886274, 1);
         graph.connectVertexToEdgeByName(C1_03, "C1 Corridor");
-        Vertex C1_04 = new Vertex("C1:04", VertexType.ROOM, 46.01239944086005, 8.961342661886274, 1);
+        Vertex C1_04 = new Vertex("C1.04", VertexType.ROOM, 46.01239944086005, 8.961342661886274, 1);
         graph.connectVertexToEdgeByName(C1_04, "C1 Corridor");
 
         Vertex Outside = new Vertex("Outside", VertexType.OUTSIDE, 46.0123761558387, 8.960759281466686, 0);

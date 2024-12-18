@@ -75,14 +75,20 @@ public class MainActivity extends AppCompatActivity {
             // store the usi map in the database
             Graph graph = new Graph().generateUSIMap();
             for (Vertex vertex : graph.getVertices()) {
-                String pictureName = vertex.getName()+".jpg";
+                String pictureName = vertex.getName()+".jpeg";
+                if (vertex.getName().contains("-")) {
+                    String[] parts = vertex.getName().split("-");
+                    pictureName = parts[1] + ".jpeg";
+                }
+
                 InputStream inputStream = null;
                 try {
                     try {
                         inputStream = getAssets().open("pictures_usi/" + pictureName);
+                        System.out.println("Picture found for vertex " + pictureName);
                     } catch (IOException e) {
                         inputStream = getAssets().open("pictures_usi/sectorA1.jpg");
-                        System.out.println("Picture not found for vertex " + vertex.getName() + ". Using default picture instead.");
+                        System.out.println("Picture not found for vertex " + pictureName + ". Using default picture instead.");
                     }
                     // save the picture to the internal storage
                     File file = new File(getFilesDir(), pictureName);
@@ -97,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
                     inputStream.close();
                     // update the vertex with the path to the picture
                     vertex.setImagePath(file.getAbsolutePath());
+                    System.out.println("Picture saved for vertex " + vertex.getName() + " at " + file.getAbsolutePath());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
