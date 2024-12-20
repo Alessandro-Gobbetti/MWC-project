@@ -2,10 +2,14 @@ package com.example.usimaps;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.example.usimaps.map.Graph;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
@@ -101,5 +105,58 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
 
         db.close();
+    }
+
+    public Graph loadGraph(String name) {
+        // load the graph from the database
+        SQLiteDatabase db = getReadableDatabase();
+        String[] projection = {
+                DatabaseHelper.COLUMN_MAP_NAME,
+                DatabaseHelper.COLUMN_MAP_OBJECT
+        };
+        String selection = DatabaseHelper.COLUMN_MAP_NAME + " = ?";
+        String[] selectionArgs = {name};
+        Cursor cursor = db.query(
+                DatabaseHelper.TABLE_MAPS,
+                projection,
+                selection,
+                selectionArgs,
+                null,
+                null,
+                null
+        );
+        Graph graph = null;
+        if (cursor.moveToNext()) {
+            byte[] bytegraph = cursor.getBlob(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_MAP_OBJECT));
+            graph = Graph.deserialize(bytegraph);
+        }
+        cursor.close();
+        db.close();
+        return graph;
+    }
+
+    public List<String> getMapNames() {
+        // get the names of the maps in the database
+        SQLiteDatabase db = getReadableDatabase();
+        String[] projection = {
+                DatabaseHelper.COLUMN_MAP_NAME
+        };
+        Cursor cursor = db.query(
+                DatabaseHelper.TABLE_MAPS,
+                projection,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+        List<String> mapNames = new ArrayList<>();
+        while (cursor.moveToNext()) {
+            String mapName = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_MAP_NAME));
+            mapNames.add(mapName);
+        }
+        cursor.close();
+        db.close();
+        return mapNames;
     }
 }

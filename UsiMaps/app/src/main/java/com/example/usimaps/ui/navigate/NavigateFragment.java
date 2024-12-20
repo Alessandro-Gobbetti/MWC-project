@@ -14,6 +14,7 @@ import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -77,7 +78,6 @@ public class NavigateFragment extends Fragment {
     private SearchView fromSearchView, toSearchView;
 
     private List<String> locationSuggestions;
-    private String selectedFromLocation, selectedToLocation;
 
     private Graph graph = new Graph();
 
@@ -93,11 +93,8 @@ public class NavigateFragment extends Fragment {
     private TextToSpeech textToSpeech;
 
     private GenerativeModel gm;
-    //
 
     private String llmprompt;
-
-    private static final int CAMERA_PERMISSION_REQUEST_CODE = 100;
 
     private ActivityResultLauncher<String> requestCameraPermissionLauncher;
 
@@ -134,18 +131,9 @@ public class NavigateFragment extends Fragment {
                     if (result == TextToSpeech.LANG_MISSING_DATA ||
                             result == TextToSpeech.LANG_NOT_SUPPORTED) {
                         Toast.makeText(requireContext(), "TTS language not supported", Toast.LENGTH_SHORT).show();
-                    } else {
-                        // TTS is ready, set up the button listener
-//                        speakButton.setOnClickListener(v -> {
-//                            // Speak out the instruction
-//                            String instruction = "Turn left in 100 meters onto Main Street.";
-//                            speakInstructions("Testing speech");
-//                            textToSpeech.speak(instruction, TextToSpeech.QUEUE_FLUSH, null, "InstructionID");
-//                        });
-                        Toast.makeText(requireContext(), "TTS OKAY", Toast.LENGTH_SHORT).show();
                     }
                 } else {
-                    Toast.makeText(requireContext(), "TTS initialization failed", Toast.LENGTH_SHORT).show();
+                    Log.e("Navigate Fragment","TTS initialization failed");
                 }
             }
         });
@@ -187,7 +175,7 @@ public class NavigateFragment extends Fragment {
                 if (listeningDialog != null && listeningDialog.isShowing()) {
                     listeningDialog.dismiss();
                 }
-                Toast.makeText(requireContext(), "Speech recognition error", Toast.LENGTH_SHORT).show();
+                Log.e("Navigation Fragment","Speech recognition error");
             }
 
             @Override
@@ -201,35 +189,11 @@ public class NavigateFragment extends Fragment {
                 if (matches != null && !matches.isEmpty()) {
                     String recognizedText = matches.get(0);
 
-                    System.out.println("RECOGNIZED TEXT" + recognizedText);
                     Toast.makeText(requireContext(), recognizedText, Toast.LENGTH_SHORT).show();
 
+                    Log.i("Recognized Text:", recognizedText);
+
                     ListenableFuture<GenerateContentResponse> response = getLLMOutput(gm, recognizedText);
-                    // wait for the response
-
-
-                    // locations detected
-//                    if (resultLLM.contains("Source Location:") && resultLLM.contains("Destination Location:")) {
-//                        String[] parts = resultLLM.split("Source Location: ");
-//                        String source = parts[1].split(",")[0];
-//                        String destination = parts[1].split("Destination Location: ")[1].split(",")[0];
-//                        System.out.println("Source: " + source + " Destination: " + destination);
-//                        fromSearchBar.setText(source);
-//                        fromSearchView.getEditText().setText(source);
-//                        fromLocationSelected(source);
-//                        toSearchBar.setText(destination);
-//                        toSearchView.getEditText().setText(destination);
-//                        toLocationSelected(destination);
-//                    } else {
-//                        // speak the output
-//                        speakInstructions(resultLLM);
-//                        // query again
-//                        startVoiceInput();
-//                    }
-
-//                    fromSearchBar.setText(recognizedText);
-//                    fromSearchView.getEditText().setText(recognizedText);
-//                    fromLocationSelected(recognizedText);
                 }
             }
 
@@ -261,24 +225,15 @@ public class NavigateFragment extends Fragment {
         binding = FragmentNavigateBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
-//        byte[] bytegraph = Graph.serialize(graph);
-//        System.out.println("Bytegraph: " + Arrays.toString(bytegraph));
-//        Graph graph_read = Graph.deserialize(bytegraph);
-//        System.out.println("Graph read: " + graph_read);
-//        graph_read.print();
-//        System.out.println("______________");
-
-//        saveGraph();
-        Graph loadedGraph = loadGraph("USI Campus EST");
+        DatabaseHelper db = new DatabaseHelper(requireContext());
+        Graph loadedGraph = db.loadGraph("USI Campus EST");
         if (loadedGraph != null) {
             this.graph = loadedGraph;
             System.out.println("Graph loaded: " + graph.getMapName());
         } else {
             this.graph = graph.generateUSIMap();
         }
-        System.out.println("LOAD______________");
-        System.out.println("Names: " + getMapNames());
-        //
+
         fromSearchBar = binding.fromSearchBar;
         fromSearchView = binding.fromSearchView;
 
@@ -290,27 +245,6 @@ public class NavigateFragment extends Fragment {
 
         viewPager = binding.NavRouteViewPager;
         viewPager.setAdapter(new NavRouteAdapter(this));
-//        viewPager.setAdapter(new FragmentStateAdapter(this) {
-//
-////            RouteListFragment routeListFragment = new RouteListFragment();
-////            NavigationCardsFragment navigationCardsFragment = new NavigationCardsFragment();
-//
-//            @NonNull
-//            @Override
-//            public Fragment createFragment(int position) {
-//                if (position == 0) {
-//                    return new RouteListFragment();
-//                } else {
-//                    return new NavigationCardsFragment();
-//                }
-//            }
-//
-//            @Override
-//            public int getItemCount() {
-//                return 2;
-//            }
-//
-//        });
 
         // disable swipe
         viewPager.setUserInputEnabled(false);
@@ -352,19 +286,6 @@ public class NavigateFragment extends Fragment {
             return false;
         });
 
-        // Retrieve the route data from the arguments
-//        Bundle args = getArguments();
-//        if (args != null) {
-//            String start = args.getString("start");
-//            String goal = args.getString("goal");
-//            // set the search bars
-//            fromSearchBar.setText(start);
-//            toSearchBar.setText(goal);
-//            // Display the route
-//            checkLocationsSelected();
-//        }
-
-
         this.resetLLMPrompt();
 
         return root;
@@ -373,9 +294,6 @@ public class NavigateFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        // Set the title
-        System.out.println("RESUMED");
-
 
         Bundle args = getArguments();
         if (args != null) {
@@ -483,8 +401,6 @@ public class NavigateFragment extends Fragment {
     }
 
 
-
-
     private void openQRCodeScanner() {
         ArrayList<String> validLocations = new ArrayList<>(locationSuggestions);
         QRCodeScannerDialogFragment qrCodeScannerDialogFragment = QRCodeScannerDialogFragment.newInstance(validLocations);
@@ -495,40 +411,26 @@ public class NavigateFragment extends Fragment {
 
         // create a viewpager2 object
         FragmentStateAdapter adapter = (FragmentStateAdapter) this.viewPager.getAdapter();
-        System.out.println("||||||Adapter: " + adapter);
         if (adapter != null) {
-            System.out.println("||||||Adapter count: " + adapter.getItemCount());
             List<Fragment> all_children = getChildFragmentManager().getFragments();
-            System.out.println("||||||All children: " + all_children.size());
-            for (Fragment child : all_children) {
-                System.out.println("||||||Child: " + child + " Type: " + child.getClass() + " Tag: " + child.getTag());
-            }
-
 
             for (int i = 0; i < adapter.getItemCount(); i++) {
                 Fragment fragment = getChildFragmentManager().findFragmentByTag("f" + i);
 
-
-
-                System.out.println("||||||Fragment: " + fragment);
                 if (fragment instanceof RouteListFragment) {
-                    System.out.println("||||||Updating RouteListFragment");
                     ((RouteListFragment) fragment).updatePath(path, instructions);
                 } else if (fragment instanceof NavigationCardsFragment) {
-                    System.out.println("||||||Updating NavigationCardsFragment");
                     ((NavigationCardsFragment) fragment).updatePath(path, instructions);
                 } else {
-                    System.out.println("||||||Fragment not found");
+                    Log.i("Navigation Fragment", "Fragment not found");
                 }
             }
         }
-        System.out.println("Path updated with " + path.size() + " vertices");
-
+        Log.i("Navigation Fragment: ", "Path updated with " + path.size() + " vertices");
         showEmptyPathMessage(path);
     }
 
     private void showEmptyPathMessage(List<Vertex> path) {
-        System.out.println("Path size: " + path.size() + " vertices " + path.isEmpty());
         if (path.isEmpty()) {
             binding.missingRouteIcon.setVisibility(View.VISIBLE);
             binding.emptyRouteText.setVisibility(View.VISIBLE);
@@ -542,44 +444,8 @@ public class NavigateFragment extends Fragment {
 
     public void speakInstructions(String instruction){
         if(textToSpeech != null){
-//            Toast.makeText(requireContext(), "TTS Speaking", Toast.LENGTH_SHORT).show();
             textToSpeech.speak(instruction, TextToSpeech.QUEUE_FLUSH, null, "Sample ID");
-        }else {
-//            Toast.makeText(requireContext(), "TTS is null", Toast.LENGTH_SHORT).show();
         }
-    }
-
-    private void createViewPager(View root, List<Vertex> path, List<String> instructions) {
-//        // create a viewpager2 object
-//        ViewPager2 viewPager2 = root.findViewById(R.id.viewPager);
-//        TabLayout tabLayout = root.findViewById(R.id.tabLayout);
-//
-//        // add the cards to the viewpager2 object
-//        ViewPagerAdapter adapter = new ViewPagerAdapter(getActivity(), path, instructions);
-//        viewPager2.setAdapter(adapter);
-//
-//        // set the tablayout with the viewpager2
-//        new TabLayoutMediator(tabLayout, viewPager2,
-//            (tab, position) -> {}
-//        ).attach();
-//
-//        // set the button listeners
-//        setButtonListeners(root, viewPager2);
-    }
-
-    // use a recyclerview to display the instructions
-    private void createRecyclerView(View root, List<Vertex> path, List<String> instructions) {
-        // create a recyclerview object
-//        RecyclerView recyclerView = root.findViewById(R.id.recyclerView);
-//
-//        // create a recyclerview adapter
-//        RecyclerViewAdapter adapter = new RecyclerViewAdapter(path, instructions);
-//
-//        // set the layout manager
-//        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-//
-//        // set the adapter
-//        recyclerView.setAdapter(adapter);
     }
 
     public void updateRoute(String newStart, String newEnd) {
@@ -621,84 +487,6 @@ public class NavigateFragment extends Fragment {
          db.close();
     }
 
-    private void saveGraph() {
-        // save the graph in the database, if already exists, update
-        DatabaseHelper dbHelper = new DatabaseHelper(getContext());
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        String mapName = graph.getMapName();
-        byte[] bytegraph = Graph.serialize(graph);
-        values.put(DatabaseHelper.COLUMN_MAP_NAME, mapName);
-        values.put(DatabaseHelper.COLUMN_MAP_OBJECT, bytegraph);
-
-        // Check if the map already exists
-        String selection = DatabaseHelper.COLUMN_MAP_NAME + " = ?";
-        String[] selectionArgs = { mapName };
-
-        int count = db.update(DatabaseHelper.TABLE_MAPS, values, selection, selectionArgs);
-
-        // If the map does not exist, insert it
-        if (count == 0) {
-            db.insert(DatabaseHelper.TABLE_MAPS, null, values);
-        }
-
-        db.close();
-    }
-
-    private Graph loadGraph(String name) {
-        // load the graph from the database
-        DatabaseHelper dbHelper = new DatabaseHelper(getContext());
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        String[] projection = {
-                DatabaseHelper.COLUMN_MAP_NAME,
-                DatabaseHelper.COLUMN_MAP_OBJECT
-        };
-        String selection = DatabaseHelper.COLUMN_MAP_NAME + " = ?";
-        String[] selectionArgs = {name};
-        Cursor cursor = db.query(
-                DatabaseHelper.TABLE_MAPS,
-                projection,
-                selection,
-                selectionArgs,
-                null,
-                null,
-                null
-        );
-        Graph graph = null;
-        if (cursor.moveToNext()) {
-            byte[] bytegraph = cursor.getBlob(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_MAP_OBJECT));
-            graph = Graph.deserialize(bytegraph);
-        }
-        cursor.close();
-        db.close();
-        return graph;
-    }
-
-    public List<String> getMapNames() {
-        // get the names of the maps in the database
-        DatabaseHelper dbHelper = new DatabaseHelper(getContext());
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        String[] projection = {
-                DatabaseHelper.COLUMN_MAP_NAME
-        };
-        Cursor cursor = db.query(
-                DatabaseHelper.TABLE_MAPS,
-                projection,
-                null,
-                null,
-                null,
-                null,
-                null
-        );
-        List<String> mapNames = new ArrayList<>();
-        while (cursor.moveToNext()) {
-            String mapName = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_MAP_NAME));
-            mapNames.add(mapName);
-        }
-        cursor.close();
-        db.close();
-        return mapNames;
-    }
 
     @Override
     public void onDestroyView() {
@@ -734,59 +522,7 @@ public class NavigateFragment extends Fragment {
 
     }
 
-//    @Override
-//    public void onSaveInstanceState(@NonNull Bundle outState) {
-//        super.onSaveInstanceState(outState);
-//        // Save the path and instructions
-//        outState.putParcelableArrayList("path", new ArrayList<>(path));
-//        outState.putStringArrayList("instructions", new ArrayList<>(instructions));
-//    }
-//
-//    @Override
-//    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
-//    }
 
-
-    // define button click listener for the next and previous buttons
-//    private void setButtonListeners(View root) {
-//        Button nextButton = root.findViewById(R.id.next_button);
-//        Button previousButton = root.findViewById(R.id.prev_button);
-//
-//        nextButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-////                viewPager2.setCurrentItem(viewPager2.getCurrentItem() + 1);
-//                Graph graph = new Graph().generateUSIMap();
-//                // list of vertices
-//                List<String> classes = graph.getSearchableNames();
-//                // get random
-//                String newStart = classes.get((int) (Math.random() * classes.size()));
-//                String newEnd = classes.get((int) (Math.random() * classes.size()));
-//
-//                Vertex startVertex = graph.getVertexByName(newStart);
-//                Vertex endVertex = graph.getVertexByName(newEnd);
-//
-//                Pair<List<Vertex>, Double> shortestPath = graph.getShortestPath(startVertex, endVertex);
-//                List<Vertex> path = shortestPath.getFirst();
-//                double weight = shortestPath.getSecond();
-//                Pair<List<Vertex>, List<String>> pathInstructions = graph.toSimpleInstructions(path);
-//                path = pathInstructions.getFirst();
-//                List<String> instructions = pathInstructions.getSecond();
-//
-//                // update the path
-//                updatePath(path, instructions);
-//
-//
-//            }
-//        });
-//
-//        previousButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//
-//            }
-//        });
-//    }
 
     private void setupSearchBarAndView(SearchBar searchBar, SearchView searchView, boolean isFrom) {
         //        // Connect the search bar and search view
@@ -846,17 +582,12 @@ public class NavigateFragment extends Fragment {
 
     private void fromLocationSelected(String location) {
         // Called when the "from" location is selected
-        Toast.makeText(requireContext(), "From location selected", Toast.LENGTH_SHORT).show();
-        selectedFromLocation = location;
-
         // Check if both locations are selected
         checkLocationsSelected();
     }
 
     private void toLocationSelected(String location) {
         // Called when the "to" location is selected
-        Toast.makeText(requireContext(), "To location selected", Toast.LENGTH_SHORT).show();
-        selectedToLocation = location;
 
         // Check if both locations are selected
         checkLocationsSelected();
@@ -889,13 +620,6 @@ public class NavigateFragment extends Fragment {
         //TODO: Add prompt for lmm and then the audio input
 
         llmprompt += "\nInput: '" + audio;
-//        String llmPrompt = "You are a helpful assistant tasked with extracting two locations from user input. The user will describe their current location (source) and the desired destination (target) in natural language. " +
-//                "Extract the locations as follows: Source Location: The starting point described by the user. Destination Location: The endpoint described by the user. " +
-//                "If the input is unclear, respond with 'Unable to determine locations'. Examples: Input: 'I want to go from Room A to Room B.' Output: Source Location: Room A, Destination Location: Room B " +
-//                "Input: 'Take me from the library to the main hall.' Output: Source Location: Library, Destination Location: Main Hall Input: 'I'm starting at the cafeteria and heading to the science building.' " +
-//                "Output: Source Location: Cafeteria, Destination Location: Science Building Input: 'I just want to go somewhere.' Output: Unable to determine locations.";
-
-//        String llmInput = llmPrompt + "\nInput: '" + audio + "'\nOutput:";
 
         Content content = new Content.Builder().addText(llmprompt).build();
 
@@ -910,7 +634,7 @@ public class NavigateFragment extends Fragment {
                     @Override
                     public void onSuccess(GenerateContentResponse result) {
                         String llmOutput = result.getText();
-                        System.out.println("LLM Output: " + llmOutput);
+                        Log.i("LLM Output: ", llmOutput);
 //                        Toast.makeText(requireContext(), llmOutput, Toast.LENGTH_SHORT).show();
 
 
@@ -924,17 +648,14 @@ public class NavigateFragment extends Fragment {
                                 String[] parts = llmOutput.split("Source Location: ");
                                 String source = parts[1].split(",")[0];
                                 String destination = parts[1].split("Destination Location: ")[1].split(",")[0];
-                                System.out.println("Source: " + source + " Destination: " + destination);
+                                Log.i("LLM: ", "Source: " + source + " Destination: " + destination);
 
                                 // trim source and destination
                                 source = source.trim();
                                 destination = destination.trim();
                                 // double check if the locations are valid
                                 if (!locationSuggestions.contains(source) || !locationSuggestions.contains(destination)) {
-                                    for (String location : locationSuggestions) {
-                                        System.out.println(location);
-                                    }
-                                    Toast.makeText(requireContext(), "Invalid locations", Toast.LENGTH_SHORT).show();
+                                    Log.e("LLM:", "Invalid Locations");
                                     return;
                                 }
 

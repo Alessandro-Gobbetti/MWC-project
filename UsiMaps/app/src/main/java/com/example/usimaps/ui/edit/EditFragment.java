@@ -88,7 +88,8 @@ public class EditFragment extends Fragment {
         binding = FragmentEditBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
-        Graph loadedGraph = loadGraph("USI Campus EST");
+        DatabaseHelper db = new DatabaseHelper(getContext());
+        Graph loadedGraph = db.loadGraph("USI Campus EST");
         if (loadedGraph != null) {
             this.graph = loadedGraph;
             System.out.println("Graph loaded: " + graph.getMapName());
@@ -467,35 +468,6 @@ public class EditFragment extends Fragment {
                 })
                 .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
                 .show();
-    }
-
-    private Graph loadGraph(String name) {
-        // load the graph from the database
-        DatabaseHelper dbHelper = new DatabaseHelper(getContext());
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        String[] projection = {
-                DatabaseHelper.COLUMN_MAP_NAME,
-                DatabaseHelper.COLUMN_MAP_OBJECT
-        };
-        String selection = DatabaseHelper.COLUMN_MAP_NAME + " = ?";
-        String[] selectionArgs = {name};
-        Cursor cursor = db.query(
-                DatabaseHelper.TABLE_MAPS,
-                projection,
-                selection,
-                selectionArgs,
-                null,
-                null,
-                null
-        );
-        Graph graph = null;
-        if (cursor.moveToNext()) {
-            byte[] bytegraph = cursor.getBlob(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_MAP_OBJECT));
-            graph = Graph.deserialize(bytegraph);
-        }
-        cursor.close();
-        db.close();
-        return graph;
     }
 
     @Override
