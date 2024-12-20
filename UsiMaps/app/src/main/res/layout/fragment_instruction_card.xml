@@ -27,7 +27,7 @@
                     android:id="@+id/instruction_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Instruction"
+                    android:text="@string/instruction"
                     android:textSize="24sp"
                     android:textStyle="bold"
                     android:gravity="center"/>

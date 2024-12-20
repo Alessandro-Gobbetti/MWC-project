@@ -32,7 +32,7 @@
                 android:layout_height="wrap_content"
                 android:paddingTop="8dp"
                 android:paddingHorizontal="16dp"
-                android:text="12/12/2020"
+                android:text="@string/date"
                 android:textSize="12sp"
                 android:textStyle="italic"/>
 
@@ -57,7 +57,7 @@
                     android:layout_weight="1"
                     android:gravity="start"
                     android:paddingHorizontal="16dp"
-                    android:text="start"
+                    android:text="@string/start"
                     android:textSize="20sp"
                     android:textStyle="bold"/>
                 <ImageView
@@ -76,7 +76,7 @@
                     android:layout_marginEnd="10dp"
                     android:gravity="end"
                     android:paddingHorizontal="16dp"
-                    android:text="Door2 Sector D"
+                    android:text="@string/door2_sector_d"
                     android:textSize="20sp"
                     android:textStyle="bold"/>
 

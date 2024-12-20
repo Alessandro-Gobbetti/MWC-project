@@ -37,7 +37,7 @@
                 android:layout_height="wrap_content"
                 android:gravity="start"
                 android:padding="16dp"
-                android:text="Instruction"
+                android:text="@string/instruction"
                 android:textSize="20sp"
                 android:textStyle="bold" />
 

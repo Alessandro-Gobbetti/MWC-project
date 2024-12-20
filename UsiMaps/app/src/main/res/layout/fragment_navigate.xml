@@ -25,7 +25,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="4dp"
-                android:hint="From"
+                android:hint="@string/from"
                 app:menu="@menu/from_search_bar_menu"
                 app:navigationIcon="@drawable/location_pin" />
 
@@ -44,7 +44,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:layout_marginBottom="8dp"
-                android:hint="To"
+                android:hint="@string/to"
                 app:navigationIcon="@drawable/location_pin" />
         </com.google.android.material.appbar.AppBarLayout>
 
@@ -53,7 +53,7 @@
             android:id="@+id/from_search_view"
             android:layout_width="match_parent"
             android:layout_height="236dp"
-            android:hint="From location"
+            android:hint="@string/from_location"
             app:layout_anchor="@id/from_search_bar">
 
             <androidx.recyclerview.widget.RecyclerView
@@ -68,7 +68,7 @@
             android:id="@+id/to_search_view"
             android:layout_width="match_parent"
             android:layout_height="236dp"
-            android:hint="To location"
+            android:hint="@string/to_location"
             app:layout_anchor="@id/to_search_bar">
 
             <androidx.recyclerview.widget.RecyclerView
@@ -135,7 +135,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:text="Select a route to navigate"
+        android:text="@string/select_a_route_to_navigate"
         app:layout_constraintTop_toBottomOf="@+id/missingRouteIcon"
         />
 

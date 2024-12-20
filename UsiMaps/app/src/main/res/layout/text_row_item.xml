@@ -18,7 +18,7 @@
             android:id="@+id/textView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="TEST"/>
+            android:text="@string/test"/>
     </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

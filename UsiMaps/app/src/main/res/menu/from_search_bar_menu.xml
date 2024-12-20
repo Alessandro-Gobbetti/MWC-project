@@ -4,12 +4,12 @@
     <item
         android:id="@+id/action_qr_scan"
         android:icon="@drawable/qr_code_scanner_small"
-        android:title="QR Scanner"
+        android:title="@string/qr_scanner"
         app:showAsAction="always" />
 
     <item
         android:id="@+id/action_voice_input"
         android:icon="@drawable/mic_drop"
-        android:title="Voice Input"
+        android:title="@string/voice_input"
         app:showAsAction="always" />
 </menu>

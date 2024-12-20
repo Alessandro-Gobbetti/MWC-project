@@ -34,7 +34,7 @@
                 android:id="@+id/textInputRoomName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Room Name">
+                android:hint="@string/room_name">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/editTextRoomName"
@@ -52,7 +52,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:hint="Floor"
+                    android:hint="@string/floor"
                     app:endIconMode="dropdown_menu">
 
                     <com.google.android.material.textfield.MaterialAutoCompleteTextView
@@ -67,7 +67,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:hint="Type"
+                    android:hint="@string/type"
                     app:endIconMode="dropdown_menu">
 
                     <com.google.android.material.textfield.MaterialAutoCompleteTextView
@@ -82,7 +82,7 @@
                 android:id="@+id/textInputEdge"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Connected Edges"
+                android:hint="@string/connected_edges"
                 app:endIconMode="dropdown_menu">
 
                 <com.google.android.material.textfield.MaterialAutoCompleteTextView
@@ -108,21 +108,21 @@
                 android:layout_height="150dp"
                 android:layout_marginTop="16dp"
                 android:scaleType="centerCrop"
-                android:contentDescription="Selected Image" />
+                android:contentDescription="@string/selected_image" />
 
             <!-- Button to show camera preview -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonShowCamera"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Take a Photo"
+                android:text="@string/take_a_photo"
                 android:layout_marginTop="16dp" />
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/textInputGPS"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="GPS Position"
+                android:hint="@string/gps_position"
                 android:layout_marginTop="16dp"
                 app:endIconMode="none">
 
@@ -132,7 +132,7 @@
                     android:layout_height="wrap_content"
                     android:enabled="false"
                     android:backgroundTint="@android:color/transparent"
-                    android:text="Waiting for coordinates..." />
+                    android:text="@string/waiting_for_coordinates" />
             </com.google.android.material.textfield.TextInputLayout>
 
 
@@ -141,7 +141,7 @@
                 android:id="@+id/buttonSubmitForm"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Update Map"
+                android:text="@string/update_map"
                 android:layout_marginTop="16dp" />
 
         </LinearLayout>
@@ -179,7 +179,7 @@
             android:id="@+id/buttonReturnToForm"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Back to Form"
+            android:text="@string/back_to_form"
             android:layout_margin="16dp"
             android:layout_gravity="top|end" />
     </FrameLayout>
