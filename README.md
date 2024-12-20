@@ -13,10 +13,12 @@ This repository contains the project for the [Mobile and Wearable Computing](htt
 
 USIMaps is a mobile Android application that allows users to navigate the campus of the Università della Svizzera Italiana (USI) in Lugano.
 
+<p float="left">
 <img style="width:24%;" src="./images/route.png">
 <img style="width:24%;" src="./images/navigation_card.png">
 <img style="width:24%;" src="./images/edit.png">
 <img style="width:24%;" src="./images/history.png">
+</p>
 
 ## Prerequisites
 
