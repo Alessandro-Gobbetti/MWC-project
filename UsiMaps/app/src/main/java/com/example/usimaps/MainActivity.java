@@ -7,22 +7,16 @@ import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
-import android.view.View;
+import android.util.Log;
 import android.view.Menu;
-import android.widget.Toast;
 
 import com.example.usimaps.map.Graph;
 import com.example.usimaps.map.Vertex;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.android.material.snackbar.Snackbar;
-import com.google.android.material.navigation.NavigationView;
 
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
-import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.AppCompatActivity;
 
 import androidx.core.app.ActivityCompat;
@@ -37,6 +31,14 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * MainActivity serves as the primary entry point of the application, managing navigation,
+ * permissions, and the initialization of application data such as the USI map.
+ *
+ * This class integrates a bottom navigation bar and sets up navigation controllers
+ * to manage different fragments within the app. It also handles runtime permission requests
+ * and ensures that required permissions are granted before using certain features.
+ */
 public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration mAppBarConfiguration;
@@ -45,6 +47,12 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_PERMISSIONS = 45;
     private boolean runningOorLater = android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
 
+    /**
+     * Initializes the activity, setting up navigation, permissions, and application data.
+     *
+     * @param savedInstanceState If the activity is being re-initialized after previously
+     *                           being shut down, this contains the most recent data.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -85,10 +93,10 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     try {
                         inputStream = getAssets().open("pictures_usi/" + pictureName);
-                        System.out.println("Picture found for vertex " + pictureName);
+                        Log.i("Main Activity","Picture found for vertex " + pictureName);
                     } catch (IOException e) {
                         inputStream = getAssets().open("pictures_usi/sectorA1.jpg");
-                        System.out.println("Picture not found for vertex " + pictureName + ". Using default picture instead.");
+                        Log.e("Main Activity", "Picture not found for vertex " + pictureName + ". Using default picture instead.");
                     }
                     // save the picture to the internal storage
                     File file = new File(getFilesDir(), pictureName);
@@ -134,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
             editor.putBoolean("firstTime", true);
             editor.commit();
 
-            System.out.println("USI map stored in the database for the first time");
+            Log.i("Main Activity:", "USI map stored in the database for the first time");
         }
     }
 
@@ -146,6 +154,11 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    /**
+     * Handles navigation when the user selects the Up button.
+     *
+     * @return True if navigation was successful; false otherwise.
+     */
     @Override
     public boolean onSupportNavigateUp() {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
@@ -153,6 +166,10 @@ public class MainActivity extends AppCompatActivity {
                 || super.onSupportNavigateUp();
     }
 
+    /**
+     * Requests necessary permissions (camera, location, microphone) at runtime if they
+     * have not already been granted.
+     */
     private void requestPermissionsIfNeeded() {
         String[] permissions = {
                 Manifest.permission.CAMERA,
@@ -172,6 +189,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Handles the results of runtime permission requests.
+     *
+     * @param requestCode  The request code passed in the permission request.
+     * @param permissions  The requested permissions.
+     * @param grantResults The grant results for the corresponding permissions.
+     */
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -186,26 +210,24 @@ public class MainActivity extends AppCompatActivity {
                     if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                         cameraGranted = true;
                     } else {
-                        Toast.makeText(this, "Camera permission denied", Toast.LENGTH_SHORT).show();
+                        Log.e("Main Activity", "Camera permission denied");
                     }
                 } else if (permissions[i].equals(Manifest.permission.ACCESS_FINE_LOCATION)) {
                     if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                         locationGranted = true;
                     } else {
-                        Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show();
+                        Log.e("Main Activity", "Location permission denied");
                     }
                 }
             }
 
             // Handle granted permissions
             if (cameraGranted) {
-                Toast.makeText(this, "Camera permission granted", Toast.LENGTH_SHORT).show();
-                // You can call any method or notify fragments if necessary
+                Log.i("Main Activity", "Camera permission granted");
             }
 
             if (locationGranted) {
-                Toast.makeText(this, "Location permission granted", Toast.LENGTH_SHORT).show();
-                // You can call any method or notify fragments if necessary
+                Log.i("Main Activity", "Location permission granted");
             }
         }
     }

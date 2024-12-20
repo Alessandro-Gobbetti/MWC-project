@@ -4,20 +4,18 @@ package com.example.usimaps.ui.edit;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -42,6 +40,14 @@ import com.google.android.material.textfield.TextInputEditText;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A fragment that allows users to edit and add new locations (vertices) to the map.
+ *
+ * The fragment provides a form where users can input a room name, select its floor,
+ * connected edges, and type. Users have to capture an image for the location, which also
+ * records their current GPS coordinates.
+ * The data is validated and saved to a database upon submission.
+ */
 public class EditFragment extends Fragment {
 
     private FragmentEditBinding binding;
@@ -101,7 +107,7 @@ public class EditFragment extends Fragment {
                 new ActivityResultContracts.RequestPermission(),
                 isGranted -> {
                     if (!isGranted) {
-                        Toast.makeText(requireContext(), "Camera permission is required.", Toast.LENGTH_SHORT).show();
+                        Log.e("Edit Fragment: ", "Camera permission is required.");
                     }
                 });
 
@@ -109,7 +115,7 @@ public class EditFragment extends Fragment {
                 new ActivityResultContracts.RequestPermission(),
                 isGranted -> {
                     if (!isGranted) {
-                        Toast.makeText(requireContext(), "Location permission is required.", Toast.LENGTH_SHORT).show();
+                        Log.e("Edit Fragment: ", "Location permission is required.");
                     }
                 });
 
@@ -148,21 +154,11 @@ public class EditFragment extends Fragment {
         return root;
     }
 
-    private void addChip(String edge) {
-        // Create a new Chip
-        Chip chip = new Chip(requireContext());
-        chip.setText(edge);
-        chip.setCloseIconVisible(true); // Show the close icon
-        chip.setOnCloseIconClickListener(v -> {
-            // Remove the chip and update the list
-            chipGroupSelectedEdges.removeView(chip);
-            selectedEdges.remove(edge);
-        });
-
-        // Add the chip to the ChipGroup
-        chipGroupSelectedEdges.addView(chip);
-    }
-
+    /**
+     * Sets up listeners for various UI elements, including input fields and buttons.
+     *
+     * Handles image capture, form submission, validation, and permissions requests.
+     */
     private void setupListeners(){
         imageCaptureManager.setImageCaptureListener(new ImageCaptureManager.ImageCaptureListener() {
             @Override
@@ -189,7 +185,7 @@ public class EditFragment extends Fragment {
 
             @Override
             public void onError(Exception exception) {
-                Toast.makeText(requireContext(), "Failed to save photo: " + exception.getMessage(), Toast.LENGTH_SHORT).show();
+                Log.e("Edit Fragment: ", "Failed to save photo: " + exception.getMessage());
                 imageCaptureManager.shutdown();
             }
         });
@@ -271,7 +267,9 @@ public class EditFragment extends Fragment {
     }
 
     /**
-     * Configures dropdown adapters for the form fields.
+     * Configures dropdown adapters for the form fields (e.g., floors, edges, and types).
+     *
+     * Populates the MaterialAutoCompleteTextView dropdowns with relevant data from the graph.
      */
     private void setupDropdownAdapters() {
         ArrayAdapter<String> floorAdapter = new ArrayAdapter<>(
@@ -296,6 +294,11 @@ public class EditFragment extends Fragment {
         autoCompleteType.setAdapter(typeAdapter);
     }
 
+    /**
+     * Opens the camera interface, hiding the form and showing the camera preview.
+     *
+     * This method is triggered when the user opts to capture an image.
+     */
     private void openCamera(){
         // Hide form, show camera
         binding.formContainer.setVisibility(View.GONE);
@@ -306,7 +309,10 @@ public class EditFragment extends Fragment {
     }
 
     /**
-     * Validates and submits the form, adding the new vertex to the map and saving it in the database.
+     * Validates the user input in the form and submits the data to the database.
+     *
+     * Checks for required fields (room name, floor, connected edges, type, and image),
+     * and if valid, adds the new vertex to the graph and database.
      */
     private void submitForm() {
         String name = editTextName.getText() != null ? editTextName.getText().toString().trim() : "";
@@ -321,7 +327,6 @@ public class EditFragment extends Fragment {
         }
 
         if (TextUtils.isEmpty(floor) || !getFloors().contains(floor)) {
-            // FIXME: Check if floor is valid before
             autoCompleteFloor.setError("Floor required");
             autoCompleteFloor.requestFocus();
             return;
@@ -345,10 +350,6 @@ public class EditFragment extends Fragment {
             return;
         }
 
-        // TODO: If image was taken or selected, use that too
-        // TODO: Save form data to db and update map.
-        // TODO: use type too
-
         int floorInt = graph.ordinalFloorToInt(floor);
         VertexType vertexType = VertexType.valueOf(type);
         // new Vertex("Corridor D0", VertexType.CONNECTION, 46.012324, 8.961444, 0);
@@ -363,21 +364,55 @@ public class EditFragment extends Fragment {
         DatabaseHelper db = new DatabaseHelper(requireContext());
         db.updateGraph(graph);
 
-        Toast.makeText(requireContext(), "Form submitted: " + name, Toast.LENGTH_SHORT).show();
+        Log.i("Edit Fragment: ", "Form Submitted");
         // Clear the form
         clearForm();
     }
 
-    //TODO: Update these getters with actual values from the map
+    /**
+     * Adds a new chip to the ChipGroup for a selected edge.
+     *
+     * @param edge The name of the edge selected by the user.
+     */
+    private void addChip(String edge) {
+        // Create a new Chip
+        Chip chip = new Chip(requireContext());
+        chip.setText(edge);
+        chip.setCloseIconVisible(true); // Show the close icon
+        chip.setOnCloseIconClickListener(v -> {
+            // Remove the chip and update the list
+            chipGroupSelectedEdges.removeView(chip);
+            selectedEdges.remove(edge);
+        });
+
+        // Add the chip to the ChipGroup
+        chipGroupSelectedEdges.addView(chip);
+    }
+
+    /**
+     * Retrieves a list of edge names from the graph for populating the dropdown.
+     *
+     * @return A list of edge names.
+     */
     private List<String> getEdgeNames(){
         List<String> arr = new ArrayList<>(graph.getEdgeNames());
         return arr;
     }
 
+    /**
+     * Retrieves a list of floor names from the graph for populating the dropdown.
+     *
+     * @return A list of floor names.
+     */
     private List<String> getFloors(){
         return graph.getFloorNames();
     }
 
+    /**
+     * Retrieves a list of vertex types for populating the dropdown.
+     *
+     * @return A list of vertex types as strings.
+     */
     private List<String> getTypes(){
         List<String> arr = new ArrayList<>();
         for(VertexType c : VertexType.values())
@@ -385,13 +420,18 @@ public class EditFragment extends Fragment {
         return arr;
     }
 
+    /**
+     * Retrieves a list of vertex types for populating the dropdown.
+     *
+     * @return A list of vertex types as strings.
+     */
     private boolean checkName(String name){
-        List<String> allNames = graph.getSearchableNames(); // TODO: Handle edges
+        List<String> allNames = graph.getSearchableNames();
         return allNames.contains(name);
     }
 
     /**
-     * Clears all fields in the form.
+     * Clears all input fields in the form, resetting the state.
      */
     private void clearForm() {
         editTextName.setText("");
@@ -401,9 +441,18 @@ public class EditFragment extends Fragment {
         selectedEdges.clear();
         chipGroupSelectedEdges.removeAllViews();
         selectedImageView.setImageURI(null);
+        selectedImageView.setVisibility(View.GONE);
         capturedImagePath = "";
+        textGPS.setText("");
+        textGPS.setVisibility(View.GONE);
+        buttonShowCamera.setText("Take Photo");
     }
 
+    /**
+     * Checks for Camera and Location permissions, and if not granted, requests them.
+     *
+     * @param onPermissionsGranted A Runnable that executes when both permissions are granted.
+     */
     private void checkAndRequestPermissions(Runnable onPermissionsGranted) {
         boolean isCameraGranted = ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.CAMERA)
                 == PackageManager.PERMISSION_GRANTED;
@@ -447,6 +496,11 @@ public class EditFragment extends Fragment {
         }
     }
 
+    /**
+     * Displays a dialog explaining why permissions are required and requests them.
+     *
+     * @param onPositiveAction A Runnable to execute when the user agrees to grant permissions.
+     */
     private void showPermissionRationaleDialog(Runnable onPositiveAction) {
         new AlertDialog.Builder(requireContext())
                 .setTitle("Permissions Required")
@@ -456,6 +510,9 @@ public class EditFragment extends Fragment {
                 .show();
     }
 
+    /**
+     * Displays a dialog prompting the user to enable permissions from the app settings.
+     */
     private void redirectToSettingsDialog() {
         new AlertDialog.Builder(requireContext())
                 .setTitle("Permissions Denied")
@@ -475,7 +532,6 @@ public class EditFragment extends Fragment {
         super.onResume();
         // Start listening for sensor updates
         imageCaptureManager.startListeningToDirection();
-//        imageCaptureManager.startCamera();
     }
 
     @Override
@@ -484,7 +540,6 @@ public class EditFragment extends Fragment {
         // Stop listening for sensor updates to save battery
         imageCaptureManager.stopListeningToDirection();
         // Re-initialize the camera
-//        imageCaptureManager.shutdown();
     }
 
     @Override

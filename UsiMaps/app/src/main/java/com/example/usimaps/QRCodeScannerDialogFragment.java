@@ -1,10 +1,9 @@
 package com.example.usimaps;
 
-import android.Manifest;
-import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,7 +11,6 @@ import android.view.Window;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageAnalysis;
@@ -20,7 +18,6 @@ import androidx.camera.core.ImageProxy;
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 
@@ -82,7 +79,7 @@ public class QRCodeScannerDialogFragment extends DialogFragment {
             }
         } else {
             validLocations = new HashSet<>();
-            Toast.makeText(requireContext(), "No valid locations passed: ", Toast.LENGTH_SHORT).show();
+            Log.e("QRCodeScanner: ","No valid locations passed:" );
         }
     }
 
@@ -166,7 +163,7 @@ public class QRCodeScannerDialogFragment extends DialogFragment {
 
                                 if(validLocations.contains(scannedValue)){
                                     // Pass the result back using Fragment Result API
-                                    Toast.makeText(requireContext(), "QR Code Data: " + rawValue, Toast.LENGTH_SHORT).show();
+                                    Log.d("QRCode Data: ", rawValue);
                                     Bundle result = new Bundle();
                                     result.putString("qr_code_result", rawValue);
                                     getParentFragmentManager().setFragmentResult("qr_scan_result", result);
@@ -177,7 +174,7 @@ public class QRCodeScannerDialogFragment extends DialogFragment {
                                     break;
                                 }else {
                                     lastInvalidScannedValue = scannedValue;
-                                    Toast.makeText(requireContext(), "Invalid QR Code scanned. Please try again: " + rawValue, Toast.LENGTH_SHORT).show();
+                                    Log.e("QRCode: ", "Invalid QR Code scanned. Please try again");
                                 }
                             }
                             break;
