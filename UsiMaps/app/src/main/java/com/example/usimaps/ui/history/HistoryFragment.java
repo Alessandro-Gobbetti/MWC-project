@@ -24,27 +24,33 @@ import java.util.List;
 
 import kotlin.Triple;
 
+/**
+ * Fragment for the history tab
+ */
 public class HistoryFragment extends Fragment {
 
+    // View binding
     private FragmentHistoryBinding binding;
-
+    // Text to speech button
     private Button ttsButton;
-
+    // Text to speech object
     private TextToSpeech textToSpeech;
 
+    /**
+     * Create the view
+     * @param inflater LayoutInflater
+     * @param container ViewGroup
+     * @param savedInstanceState Bundle
+     * @return View
+     */
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        HistoryViewModel historyViewModel =
-                new ViewModelProvider(this).get(HistoryViewModel.class);
-
         binding = FragmentHistoryBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
-
-
-
         // Fetch history data
-        List<Triple<String, String, String>> history = getHistory();
+        DatabaseHelper dbHelper = new DatabaseHelper(getContext());
+        List<Triple<String, String, String>> history = dbHelper.getHistory();
 
         // Add RouteHistoryListFragment
         RouteHistoryListFragment routeHistoryListFragment = new RouteHistoryListFragment(history);
@@ -70,35 +76,5 @@ public class HistoryFragment extends Fragment {
         binding = null;
     }
 
-    private List<Triple<String, String, String>> getHistory() {
-        DatabaseHelper dbHelper = new DatabaseHelper(getContext());
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        String[] projection = {
-                DatabaseHelper.COLUMN_DATE,
-                DatabaseHelper.COLUMN_START,
-                DatabaseHelper.COLUMN_GOAL
-        };
-        String sortOrder = DatabaseHelper.COLUMN_ID + " DESC";
-        Cursor cursor = db.query(
-                DatabaseHelper.TABLE_HISTORY,
-                projection,
-                null,
-                null,
-                null,
-                null,
-                sortOrder
-        );
-        List<Triple<String, String, String>> history = new ArrayList<>();
-        while (cursor.moveToNext()) {
-            String date = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_DATE));
-            String start = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_START));
-            String goal = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_GOAL));
-            history.add(new Triple<>(date, start, goal));
-
-        }
-        cursor.close();
-        db.close();
-        return history;
-    }
 
 }

@@ -10,12 +10,21 @@ import com.example.usimaps.map.Vertex;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * View Pager Adapter
+ */
 public class ViewPagerAdapter extends FragmentStateAdapter {
-
+    // Path and instructions
     private List<Vertex> path;
     private List<Fragment> fragmentList = new ArrayList();
     private List<String> instructions = new ArrayList();
 
+    /**
+     * Constructor
+     * @param fragmentActivity Fragment activity
+     * @param path Path
+     * @param instructions Instructions
+     */
     public ViewPagerAdapter(FragmentActivity fragmentActivity, List<Vertex> path, List<String> instructions) {
         super(fragmentActivity);
         this.path = path;
@@ -60,6 +69,11 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
         return fragmentList;
     }
 
+    /**
+     * Update the path
+     * @param path Path
+     * @param instructions Instructions
+     */
     public void updatePath(List<Vertex> path, List<String> instructions) {
         this.path = path;
         this.instructions = instructions;

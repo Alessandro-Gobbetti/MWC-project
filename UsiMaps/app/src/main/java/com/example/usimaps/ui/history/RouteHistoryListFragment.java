@@ -20,21 +20,28 @@ import java.util.List;
 import kotlin.Triple;
 
 /**
- * A simple {@link Fragment} subclass.
- * create an instance of this fragment.
+ * The fragment for the history list
  */
 public class RouteHistoryListFragment extends Fragment {
 
+    // List of history items
     private List<Triple<String, String, String>> history = new ArrayList<>();
-
+    // View binding
     private FragmentHistoryListBinding binding;
+    // Adapter for the history list
     private HistoryAdapter adapter;
-    
+
+    /**
+     * Constructor
+     */
     public RouteHistoryListFragment() {
         // Required empty public constructor
     }
 
-
+    /**
+     * Constructor
+     * @param history List of history items
+     */
     public RouteHistoryListFragment(List<Triple<String, String, String>> history) {
         this.history = history;
     }

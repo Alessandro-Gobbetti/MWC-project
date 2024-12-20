@@ -4,11 +4,20 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 
+/**
+ * Navigation Route Adapter
+ */
 public class NavRouteAdapter extends FragmentStateAdapter {
 
+    // Route list fragment
     private RouteListFragment routeListFragment;
+    // Navigation cards fragment
     private NavigationCardsFragment navigationCardsFragment;
 
+    /**
+     * Constructor
+     * @param fragmentActivity Fragment activity
+     */
     public NavRouteAdapter(NavigateFragment fragmentActivity) {
         super(fragmentActivity);
         this.routeListFragment = new RouteListFragment();
@@ -25,13 +34,6 @@ public class NavRouteAdapter extends FragmentStateAdapter {
         }
     }
 
-    public void setRouteListFragment(RouteListFragment routeListFragment) {
-        this.routeListFragment = routeListFragment;
-    }
-
-    public void setNavigationCardsFragment(NavigationCardsFragment navigationCardsFragment) {
-        this.navigationCardsFragment = navigationCardsFragment;
-    }
 
     @Override
     public int getItemCount() {

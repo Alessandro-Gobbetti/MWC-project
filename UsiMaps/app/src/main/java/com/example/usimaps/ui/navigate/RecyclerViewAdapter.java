@@ -16,13 +16,19 @@ import com.example.usimaps.map.VertexType;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Recycler View Adapter
+ */
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder>{
-
+    // Path and instructions
     private List<Vertex> path;
-    private List<Fragment> fragmentList = new ArrayList();
     private List<String> instructions = new ArrayList();
 
-
+    /**
+     * Constructor
+     * @param path Path
+     * @param instructions Instructions
+     */
     public RecyclerViewAdapter(List<Vertex> path, List<String> instructions) {
         this.path = path;
         this.instructions = instructions;
@@ -30,7 +36,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         System.out.println("...............path: " + path);
     }
 
-
+    // Create new views (invoked by the layout manager)
     public static class ViewHolder extends RecyclerView.ViewHolder {
         private final TextView textView;
         private final ImageView iconView;
@@ -94,13 +100,20 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         return path.size();
     }
 
-    // Method to update the list of instructions
+    /**
+     * Update the path
+     * @param newPath New path
+     * @param newInstructions New instructions
+     */
     public void updatePath(List<Vertex> newPath, List<String> newInstructions) {
         path = newPath;
         instructions = newInstructions;
         notifyDataSetChanged();
     }
-
+    /**
+     * Get the path
+     * @return Path
+     */
     public List<Vertex> getPath() {
         return path;
     }

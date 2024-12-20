@@ -15,20 +15,31 @@ import com.example.usimaps.databinding.FragmentInstructionCardBinding;
 
 import java.io.File;
 
-
+/**
+ * Instruction Card Fragment
+ */
 public class InstructionCardFragment extends Fragment {
 
+    // View binding
     private FragmentInstructionCardBinding binding;
+    // instruction text
     private final String instruction;
-
     // image paths array
     private final String imgPath;
 
+    /**
+     * Default constructor
+     */
     public InstructionCardFragment() {
         this.instruction = "";
         this.imgPath = "";
     }
 
+    /**
+     * Constructor
+     * @param instruction Instruction text
+     * @param imgPath Image path
+     */
     public InstructionCardFragment(String instruction, String imgPath) {
         this.instruction = instruction;
         this.imgPath = imgPath;
@@ -67,9 +78,7 @@ public class InstructionCardFragment extends Fragment {
             binding.instructionIcon.setImageResource(R.drawable.ic_turn_right);
         else
             binding.instructionIcon.setImageResource(R.drawable.map_pin);
-
     }
-
 
     @Override
     public void onDestroyView() {

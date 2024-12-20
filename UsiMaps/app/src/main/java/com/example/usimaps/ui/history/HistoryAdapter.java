@@ -14,27 +14,46 @@ import java.util.List;
 
 import kotlin.Triple;
 
+/**
+ * Adapter for the history list
+ */
 public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHolder>{
 
+    // List of history items
     private List<Triple<String, String, String>> history = new ArrayList<>();
+    // Listener for item clicks
     private OnItemClickListener onClickListener;
 
-    public interface OnItemClickListener {
-        void onItemClick(Triple<String, String, String> item);
-    }
-
+    /**
+     * Constructor
+     * @param history List of history items
+     * @param onClickListener Listener for item clicks
+     */
     public HistoryAdapter(List<Triple<String, String, String>> history, OnItemClickListener onClickListener) {
         this.history = history;
         this.onClickListener = onClickListener;
     }
 
+    /**
+     * Interface for item click listener
+     */
+    public interface OnItemClickListener {
+        void onItemClick(Triple<String, String, String> item);
+    }
 
+    /**
+     * ViewHolder for the history list
+     */
     public static class ViewHolder extends RecyclerView.ViewHolder {
         private final TextView textViewDate;
         private final TextView textViewStart;
         private final TextView textViewGoal;
 
-
+        /**
+         * Constructor
+         * @param view View
+         * @param onClickListener Listener for item clicks
+         */
         public ViewHolder(View view, OnItemClickListener onClickListener) {
             super(view);
             // Define click listener for the ViewHolder's View
@@ -54,6 +73,10 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
             });
         }
 
+        /**
+         * Bind data to the view
+         * @param item History item
+         */
         public void bind(Triple<String, String, String> item) {
             textViewDate.setText(item.getFirst());
             textViewStart.setText(item.getSecond());

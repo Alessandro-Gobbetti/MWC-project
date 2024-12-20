@@ -19,24 +19,30 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A simple {@link Fragment} subclass.
- * create an instance of this fragment.
+ * Route List Fragment
  */
 public class RouteListFragment extends Fragment {
-
+    // Path and instructions
     private List<Vertex> path;
     private List<String> instructions;
     // binding
     private FragmentRouteListBinding binding;
     private RecyclerViewAdapter adapter;
-    
+
+    /**
+     * Default constructor
+     */
     public RouteListFragment() {
         // Required empty public constructor
         this.path = new ArrayList<>();
         this.instructions = new ArrayList<>();
     }
 
-
+    /**
+     * Constructor
+     * @param path Path
+     * @param instructions Instructions
+     */
     public RouteListFragment(List<Vertex> path, List<String> instructions) {
         this.path = path;
         this.instructions = instructions;
@@ -54,6 +60,11 @@ public class RouteListFragment extends Fragment {
         return root;
     }
 
+    /**
+     * Update the path
+     * @param path Path
+     * @param instructions Instructions
+     */
     public void updatePath(List<Vertex> path, List<String> instructions) {
         this.path = path;
         this.instructions = instructions;

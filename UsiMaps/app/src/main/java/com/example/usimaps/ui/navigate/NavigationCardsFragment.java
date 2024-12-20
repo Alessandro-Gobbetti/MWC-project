@@ -23,29 +23,35 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * A simple {@link Fragment} subclass.
- * create an instance of this fragment.
+ * Displays the navigation cards
  */
 public class NavigationCardsFragment extends Fragment {
-
+    // Path and instructions
     private List<Vertex> path;
     private List<String> instructions;
-
+    // View binding
     private FragmentNavigationCardsBinding binding;
-
+    // Viewpager2 and TabLayout
     private ViewPager2 viewPager2;
     private TabLayout tabLayout;
     private ViewPagerAdapter adapter;
-
+    // Text to speech
     private TextToSpeech textToSpeech;
-    
+
+    /**
+     * Default constructor
+     */
     public NavigationCardsFragment() {
         // Required empty public constructor
         this.path = new ArrayList<>();
         this.instructions = new ArrayList<>();
     }
 
-    // TODO: Improve how parameters are passed, use Bundle instead
+    /**
+     * Constructor
+     * @param path Path
+     * @param instructions Instructions
+     */
     public NavigationCardsFragment(List<Vertex> path, List<String> instructions) {
         this.path = path;
         this.instructions = instructions;
@@ -75,8 +81,6 @@ public class NavigationCardsFragment extends Fragment {
                 if (result == TextToSpeech.LANG_MISSING_DATA ||
                         result == TextToSpeech.LANG_NOT_SUPPORTED) {
                     Toast.makeText(requireContext(), "TTS language not supported", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(requireContext(), "TTS OKAY", Toast.LENGTH_SHORT).show();
                 }
             } else {
                 Toast.makeText(requireContext(), "TTS initialization failed", Toast.LENGTH_SHORT).show();
@@ -94,22 +98,25 @@ public class NavigationCardsFragment extends Fragment {
             }
         });
 
-
-
-
-        // set the button listeners
-//        setButtonListeners(root, viewPager2);
-
         return root;
     }
 
+    /**
+     * Speak the instruction
+     * @param instruction Instruction
+     */
     private void speakInstruction(String instruction) {
-        //TODO: Think about the second part of this condition
-        if (textToSpeech != null && !textToSpeech.isSpeaking()) {
+        if (textToSpeech != null) {
+            textToSpeech.stop();
             textToSpeech.speak(instruction, TextToSpeech.QUEUE_FLUSH, null, null);
         }
     }
 
+    /**
+     * Update the path
+     * @param path Path
+     * @param instructions Instructions
+     */
     public void updatePath(List<Vertex> path, List<String> instructions) {
         this.path = path;
         this.instructions = instructions;

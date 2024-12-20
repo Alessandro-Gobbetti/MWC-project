@@ -8,11 +8,18 @@ import android.database.sqlite.SQLiteDatabase;
 
 import com.example.usimaps.map.Graph;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
-public class DatabaseHelper extends SQLiteOpenHelper {
+import kotlin.Triple;
 
+/**
+ * Database Helper
+ */
+public class DatabaseHelper extends SQLiteOpenHelper {
+    // Database
     private static final String DATABASE_NAME = "usi_maps.db";
     private static final int DATABASE_VERSION = 1;
 
@@ -63,6 +70,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     ");";
 
 
+    /**
+     * Constructor
+     * @param context Context
+     */
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
@@ -83,7 +94,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-
+    /**
+     * Updates the graph in the database: if the graph already exists, update it, otherwise insert it
+     * @param graph Graph to update
+     */
     public void updateGraph(Graph graph) {
         // save the graph in the database, if already exists, update
         SQLiteDatabase db = getWritableDatabase();
@@ -107,6 +121,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
     }
 
+    /**
+     * Load the graph from the database
+     * @param name Name of the graph
+     * @return Graph
+     */
     public Graph loadGraph(String name) {
         // load the graph from the database
         SQLiteDatabase db = getReadableDatabase();
@@ -158,5 +177,61 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor.close();
         db.close();
         return mapNames;
+    }
+
+    /**
+     * Save the route start, end locations and date in the history
+     * @param start Start location
+     * @param end End location
+     */
+    public void saveHistory(String start, String end) {
+        // save the start and end locations in the history database
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues values = new ContentValues();
+        // date
+        Date date = new Date();
+        // To get local formatting use getDateInstance(), getDateTimeInstance(), or getTimeInstance(), or use new SimpleDateFormat(String template, Locale locale
+        SimpleDateFormat formatter = (SimpleDateFormat) SimpleDateFormat.getDateInstance();
+        String strDate = formatter.format(date);
+        values.put(DatabaseHelper.COLUMN_DATE, strDate);
+        values.put(DatabaseHelper.COLUMN_START, start);
+        values.put(DatabaseHelper.COLUMN_GOAL, end);
+        long newRowId = db.insert(DatabaseHelper.TABLE_HISTORY, null, values);
+        db.close();
+    }
+
+
+    /**
+     * Get the history of the start and end locations
+     * @return List of triples with the date, start and end locations
+     */
+    public List<Triple<String, String, String>> getHistory() {
+        SQLiteDatabase db = getReadableDatabase();
+        String[] projection = {
+                DatabaseHelper.COLUMN_DATE,
+                DatabaseHelper.COLUMN_START,
+                DatabaseHelper.COLUMN_GOAL
+        };
+        String sortOrder = DatabaseHelper.COLUMN_ID + " DESC";
+        Cursor cursor = db.query(
+                DatabaseHelper.TABLE_HISTORY,
+                projection,
+                null,
+                null,
+                null,
+                null,
+                sortOrder
+        );
+        List<Triple<String, String, String>> history = new ArrayList<>();
+        while (cursor.moveToNext()) {
+            String date = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_DATE));
+            String start = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_START));
+            String goal = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_GOAL));
+            history.add(new Triple<>(date, start, goal));
+
+        }
+        cursor.close();
+        db.close();
+        return history;
     }
 }

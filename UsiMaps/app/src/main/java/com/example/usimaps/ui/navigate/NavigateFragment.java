@@ -68,43 +68,45 @@ import java.util.concurrent.Executors;
 
 import kotlin.Pair;
 
+/**
+ * Navigate Fragment for the navigation tab
+ */
 public class NavigateFragment extends Fragment {
 
+    // View binding
     private FragmentNavigateBinding binding;
 
+    // View pager
     private ViewPager2 viewPager;
-
+    // Search bar and search view for the "from" location
     private SearchBar fromSearchBar, toSearchBar;
     private SearchView fromSearchView, toSearchView;
-
+    // List of location suggestions
     private List<String> locationSuggestions;
-
+    // Graph for navigation
     private Graph graph = new Graph();
-
+    // Path and instructions
     private List<Vertex> path = new ArrayList<>();
     private List<String> instructions = new ArrayList<>();
 
-    // Speech Recognition
+    // Speech Recognition, Text to Speech, and AI Assistant
     private SpeechRecognizer speechRecognizer;
     private Intent speechRecognizerIntent;
     private boolean isListening = false;
     private AlertDialog listeningDialog;
-
     private TextToSpeech textToSpeech;
-
     private GenerativeModel gm;
-
     private String llmprompt;
 
+    // Permission launcher for camera and microphone
     private ActivityResultLauncher<String> requestCameraPermissionLauncher;
-
     private ActivityResultLauncher<String> requestMicrophonePermissionLauncher;
 
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        // Initialize the permission launchers
         requestCameraPermissionLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
             if (isGranted) {
                 openQRCodeScanner();
@@ -112,7 +114,6 @@ public class NavigateFragment extends Fragment {
                 Toast.makeText(requireContext(), "Camera permission is required to scan QR codes.", Toast.LENGTH_SHORT).show();
             }
         });
-
         requestMicrophonePermissionLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
             if (isGranted) {
                 startVoiceInput();
@@ -121,7 +122,7 @@ public class NavigateFragment extends Fragment {
             }
         });
 
-
+        // Initialize TextToSpeech
         textToSpeech = new TextToSpeech(requireContext(), new TextToSpeech.OnInitListener() {
             @Override
             public void onInit(int status) {
@@ -217,11 +218,9 @@ public class NavigateFragment extends Fragment {
         gm = new GenerativeModel("gemini-1.5-flash", BuildConfig.apiKey);
     }
 
+    @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        NavigateViewModel navigateViewModel =
-                new ViewModelProvider(this).get(NavigateViewModel.class);
-
         binding = FragmentNavigateBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
@@ -242,16 +241,14 @@ public class NavigateFragment extends Fragment {
 
         this.locationSuggestions = graph.getSearchableNames();
 
-
         viewPager = binding.NavRouteViewPager;
         viewPager.setAdapter(new NavRouteAdapter(this));
-
         // disable swipe
         viewPager.setUserInputEnabled(false);
         viewPager.setOffscreenPageLimit(2);
         showEmptyPathMessage(new ArrayList<>());
 
-
+        // Set up the TabLayout
         TabLayout tabLayout = root.findViewById(R.id.NavRouteTabLayout);
         new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
             if (position == 0) {
@@ -286,6 +283,7 @@ public class NavigateFragment extends Fragment {
             return false;
         });
 
+        // init the LLM prompt for the first time
         this.resetLLMPrompt();
 
         return root;
@@ -308,6 +306,9 @@ public class NavigateFragment extends Fragment {
 
     //Speech Recognition
 
+    /**
+     * Start voice input
+     */
     private void startVoiceInput() {
         if (!isListening) {
             speechRecognizer.startListening(speechRecognizerIntent);
@@ -316,6 +317,9 @@ public class NavigateFragment extends Fragment {
         }
     }
 
+    /**
+     * Show the listening dialog
+     */
     private void showListeningDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setMessage("Listening...")
@@ -328,6 +332,9 @@ public class NavigateFragment extends Fragment {
         listeningDialog.show();
     }
 
+    /**
+     * Check and request camera permission
+     */
     private void checkAndRequestCameraPermission() {
         if (ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.CAMERA)
                 == PackageManager.PERMISSION_GRANTED) {
@@ -364,6 +371,9 @@ public class NavigateFragment extends Fragment {
         }
     }
 
+    /**
+     * Check and request microphone permission
+     */
     private void checkAndRequestMicrophonePermission() {
         if (ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.RECORD_AUDIO)
                 == PackageManager.PERMISSION_GRANTED) {
@@ -400,13 +410,27 @@ public class NavigateFragment extends Fragment {
         }
     }
 
+    /**
+     * Speak the instructions
+     */
+    public void speakInstructions(String instruction){
+        if(textToSpeech != null){
+            textToSpeech.speak(instruction, TextToSpeech.QUEUE_FLUSH, null, "Sample ID");
+        }
+    }
 
+    /**
+     * Open the QR code scanner
+     */
     private void openQRCodeScanner() {
         ArrayList<String> validLocations = new ArrayList<>(locationSuggestions);
         QRCodeScannerDialogFragment qrCodeScannerDialogFragment = QRCodeScannerDialogFragment.newInstance(validLocations);
         qrCodeScannerDialogFragment.show(getChildFragmentManager(), "qrCodeScanner");
     }
 
+    /**
+     * Update the path and instructions
+     */
     private void updatePath() {
 
         // create a viewpager2 object
@@ -430,6 +454,9 @@ public class NavigateFragment extends Fragment {
         showEmptyPathMessage(path);
     }
 
+    /**
+     * Show the empty path message if the path is empty, otherwise show the path
+     */
     private void showEmptyPathMessage(List<Vertex> path) {
         if (path.isEmpty()) {
             binding.missingRouteIcon.setVisibility(View.VISIBLE);
@@ -442,16 +469,21 @@ public class NavigateFragment extends Fragment {
         }
     }
 
-    public void speakInstructions(String instruction){
-        if(textToSpeech != null){
-            textToSpeech.speak(instruction, TextToSpeech.QUEUE_FLUSH, null, "Sample ID");
-        }
-    }
-
+    /**
+     * Update the route, then save it in the history database
+     * @param newStart The new start location
+     * @param newEnd The new end location
+     */
     public void updateRoute(String newStart, String newEnd) {
         updateRoute(newStart, newEnd, true);
     }
 
+    /**
+     * Update the route, then save it in the history database
+     * @param newStart The new start location
+     * @param newEnd The new end location
+     * @param saveHistory Whether to save the route in the history database
+     */
     public void updateRoute(String newStart, String newEnd, boolean saveHistory) {
         Vertex startVertex = this.graph.getVertexByName(newStart);
         Vertex endVertex = graph.getVertexByName(newEnd);
@@ -466,27 +498,11 @@ public class NavigateFragment extends Fragment {
         updatePath();
 
         // save in the history db
-        if (saveHistory)
-            saveHistory(newStart, newEnd);
+        if (saveHistory) {
+            DatabaseHelper dbHelper = new DatabaseHelper(getContext());
+            dbHelper.saveHistory(newStart, newEnd);
+        }
     }
-
-    private void saveHistory(String start, String end) {
-        // save the start and end locations in the history database
-         DatabaseHelper dbHelper = new DatabaseHelper(getContext());
-         SQLiteDatabase db = dbHelper.getWritableDatabase();
-         ContentValues values = new ContentValues();
-         // date
-         Date date = new Date();
-         // To get local formatting use getDateInstance(), getDateTimeInstance(), or getTimeInstance(), or use new SimpleDateFormat(String template, Locale locale
-         SimpleDateFormat formatter = (SimpleDateFormat) SimpleDateFormat.getDateInstance();
-         String strDate = formatter.format(date);
-         values.put(DatabaseHelper.COLUMN_DATE, strDate);
-         values.put(DatabaseHelper.COLUMN_START, start);
-         values.put(DatabaseHelper.COLUMN_GOAL, end);
-         long newRowId = db.insert(DatabaseHelper.TABLE_HISTORY, null, values);
-         db.close();
-    }
-
 
     @Override
     public void onDestroyView() {
@@ -503,27 +519,12 @@ public class NavigateFragment extends Fragment {
         }
     }
 
-    public void resetLLMPrompt(){
-        llmprompt = "You are an AI assistant on a indoor navigation app. You are tasked with extracting the user current position and destination from a user input. " +
-                "The user will describe their current location (source) and the desired destination (target) in natural language. " +
-                "The possible locations are: ";
-        for (String location : graph.getSearchableNames()) {
-            llmprompt += location + ", ";
-        }
-        llmprompt = llmprompt.substring(0, llmprompt.length() - 2) + ". " +
-                "Keep interacting with the user until you have extracted both locations. " +
-                "If the input is unclear, investigate further by asking questions. " +
-                "Once you have extracted both locations, respond only and only with 'Source Location: <source>, Destination Location: <destination>'." +
-                "\nExamples: Input: 'I want to go from Room A to Room B.' Output: Source Location: Room A, Destination Location: Room B " +
-                "Input: 'Take me from the library to the main hall.' Output: Source Location: Library, Destination Location: Main Hall Input: 'I'm starting at the cafeteria and heading to the science building.' " +
-                "Output: Source Location: Cafeteria, Destination Location: Science Building Input: 'I just want to go somewhere.' Output: Unable to determine locations.";
-
-        llmprompt += "\nPREVIOUS CONVERSATION:\n";
-
-    }
-
-
-
+    /**
+     * Set up the search bar and search view
+     * @param searchBar The search bar
+     * @param searchView The search view
+     * @param isFrom Whether the search bar is for the "from" location
+     */
     private void setupSearchBarAndView(SearchBar searchBar, SearchView searchView, boolean isFrom) {
         //        // Connect the search bar and search view
         //        searchBar.setupWithSearchView(searchView);
@@ -580,23 +581,37 @@ public class NavigateFragment extends Fragment {
         });
     }
 
+    /**
+     * Handle the case when the "from" location is selected
+     * @param location The selected location
+     */
     private void fromLocationSelected(String location) {
         // Called when the "from" location is selected
         // Check if both locations are selected
         checkLocationsSelected();
     }
 
+    /**
+     * Handle the case when the "to" location is selected
+     * @param location The selected location
+     */
     private void toLocationSelected(String location) {
         // Called when the "to" location is selected
-
         // Check if both locations are selected
         checkLocationsSelected();
     }
 
+    /**
+     * Check if both locations are selected
+     */
     private void checkLocationsSelected() {
         checkLocationsSelected(true);
     }
 
+    /**
+     * Check if both locations are selected
+     * @param saveHistory Whether to save the route in the history database
+     */
     private void checkLocationsSelected(boolean saveHistory) {
         String fromLocation = fromSearchBar.getText().toString();
         String toLocation = toSearchBar.getText().toString();
@@ -608,26 +623,62 @@ public class NavigateFragment extends Fragment {
         }
     }
 
+    /**
+     * Handle the case when both locations are selected
+     * @param fromLocation The "from" location
+     * @param toLocation The "to" location
+     */
     private void locationsSelected(String fromLocation, String toLocation) {
         // Handle the case when both locations are selected
         Toast.makeText(requireContext(), "Both locations selected", Toast.LENGTH_SHORT).show();
     }
 
+
+    /**
+     * Reset the LLM prompt to the default value
+     * This prompt is used to guide the AI assistant in extracting the source and destination locations
+     * Every time the user starts a new conversation, the prompt is reset to the default value
+     * During a conversation, the conversation history is appended to the prompt, so the AI assistant can keep track of the conversation
+     * The goal is to extract the source and destination locations from the user input
+     * The AI assistant will keep asking questions until it has extracted both locations
+     */
+    public void resetLLMPrompt(){
+        llmprompt = "You are an AI assistant on a indoor navigation app. You are tasked with extracting the user current position and destination from a user input. " +
+                "The user will describe their current location (source) and the desired destination (target) in natural language. " +
+                "The possible locations are: ";
+        for (String location : graph.getSearchableNames()) {
+            llmprompt += location + ", ";
+        }
+        llmprompt = llmprompt.substring(0, llmprompt.length() - 2) + ". " +
+                "Keep interacting with the user until you have extracted both locations. " +
+                "If the input is unclear, investigate further by asking questions. " +
+                "Once you have extracted both locations, respond only and only with 'Source Location: <source>, Destination Location: <destination>'." +
+                "\nExamples: Input: 'I want to go from Room A to Room B.' Output: Source Location: Room A, Destination Location: Room B " +
+                "Input: 'Take me from the library to the main hall.' Output: Source Location: Library, Destination Location: Main Hall Input: 'I'm starting at the cafeteria and heading to the science building.' " +
+                "Output: Source Location: Cafeteria, Destination Location: Science Building Input: 'I just want to go somewhere.' Output: Unable to determine locations.";
+
+        llmprompt += "\nPREVIOUS CONVERSATION:\n";
+
+    }
+
+
+    /**
+     * Run the AI assistant and get the LLM output. The AI assistant will extract the source and destination locations from the user input.
+     * The AI assistant will keep asking questions until it has extracted both locations.
+     * @param gm The generative model
+     * @param audio The audio input
+     * @return The LLM output
+     */
     private ListenableFuture<GenerateContentResponse> getLLMOutput(GenerativeModel gm, String audio){
-
+        // Create a GenerativeModelFutures object
         GenerativeModelFutures model = GenerativeModelFutures.from(gm);
-
-        //TODO: Add prompt for lmm and then the audio input
-
+        // Append the audio input to the LLM prompt
         llmprompt += "\nInput: '" + audio;
-
+        // Pass the LLM prompt and audio input to the AI assistant
         Content content = new Content.Builder().addText(llmprompt).build();
-
-
         Executor executor = Executors.newSingleThreadExecutor();
         ListenableFuture<GenerateContentResponse> response = model.generateContent(content);
-
-
+        // Add a callback to the response
         Futures.addCallback(
                 response,
                 new FutureCallback<GenerateContentResponse>() {
@@ -635,13 +686,9 @@ public class NavigateFragment extends Fragment {
                     public void onSuccess(GenerateContentResponse result) {
                         String llmOutput = result.getText();
                         Log.i("LLM Output: ", llmOutput);
-//                        Toast.makeText(requireContext(), llmOutput, Toast.LENGTH_SHORT).show();
-
 
                         // Post the task back to the main thread
                         new Handler(Looper.getMainLooper()).post(() -> {
-                            // Run the response again on the main thread
-//                            speakInstructions(llmOutput);
                             llmprompt += "\nOutput: '" + llmOutput;
 
                             if (llmOutput.contains("Source Location:") && llmOutput.contains("Destination Location:")) {
@@ -680,8 +727,6 @@ public class NavigateFragment extends Fragment {
 
                         });
                     }
-
-
 
                     @Override
                     public void onFailure(Throwable t) {
