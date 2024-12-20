@@ -34,6 +34,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -64,9 +66,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Permissions
         if (runningOorLater) {
-            getCameraPermission();
-            getLocationPermission();
-            getMicrophonePermission();
+            requestPermissionsIfNeeded();
         }
 
 
@@ -153,43 +153,22 @@ public class MainActivity extends AppCompatActivity {
                 || super.onSupportNavigateUp();
     }
 
-    // Request for camera permission
-    private void getCameraPermission() {
-        if (ActivityCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED)
-        {
-            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.CAMERA},
-                    REQUEST_CODE_PERMISSIONS);
-        }
-        else
-        {
-            return;
-        }
-    }
+    private void requestPermissionsIfNeeded() {
+        String[] permissions = {
+                Manifest.permission.CAMERA,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.RECORD_AUDIO
+        };
 
-    private void getLocationPermission(){
-        if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED)
-        {
-            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.ACCESS_FINE_LOCATION},
-                    REQUEST_CODE_PERMISSIONS);
+        List<String> permissionsToRequest = new ArrayList<>();
+        for (String permission : permissions) {
+            if (ActivityCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                permissionsToRequest.add(permission);
+            }
         }
-        else
-        {
-            return;
-        }
-    }
 
-    private void getMicrophonePermission(){
-        if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.RECORD_AUDIO)
-                != PackageManager.PERMISSION_GRANTED)
-        {
-            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.RECORD_AUDIO},
-                    REQUEST_CODE_PERMISSIONS);
-        }
-        else
-        {
-            return;
+        if (!permissionsToRequest.isEmpty()) {
+            ActivityCompat.requestPermissions(this, permissionsToRequest.toArray(new String[0]), REQUEST_CODE_PERMISSIONS);
         }
     }
 

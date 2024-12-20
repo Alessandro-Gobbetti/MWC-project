@@ -102,15 +102,6 @@
                 app:chipSpacingHorizontal="4dp"
                 app:chipSpacingVertical="4dp" />
 
-
-            <!-- Button to select image from gallery -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/buttonSelectImage"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Select Image from Gallery"
-                android:layout_marginTop="16dp" />
-
             <ImageView
                 android:id="@+id/imageView_selected"
                 android:layout_width="150dp"

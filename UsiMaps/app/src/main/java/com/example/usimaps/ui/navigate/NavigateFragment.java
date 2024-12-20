@@ -101,6 +101,8 @@ public class NavigateFragment extends Fragment {
 
     private ActivityResultLauncher<String> requestCameraPermissionLauncher;
 
+    private ActivityResultLauncher<String> requestMicrophonePermissionLauncher;
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -113,6 +115,15 @@ public class NavigateFragment extends Fragment {
                 Toast.makeText(requireContext(), "Camera permission is required to scan QR codes.", Toast.LENGTH_SHORT).show();
             }
         });
+
+        requestMicrophonePermissionLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+            if (isGranted) {
+                startVoiceInput();
+            } else {
+                Toast.makeText(requireContext(), "Microphone permission is required for voice recognition.", Toast.LENGTH_SHORT).show();
+            }
+        });
+
 
         textToSpeech = new TextToSpeech(requireContext(), new TextToSpeech.OnInitListener() {
             @Override
@@ -335,8 +346,7 @@ public class NavigateFragment extends Fragment {
                 checkAndRequestCameraPermission();
                 return true;
             } else if (item.getItemId() == R.id.action_voice_input) {
-                Toast.makeText(requireContext(), "Mic clicked!", Toast.LENGTH_SHORT).show();
-                startVoiceInput();
+                checkAndRequestMicrophonePermission();
                 return true;
             }
             return false;
@@ -435,6 +445,45 @@ public class NavigateFragment extends Fragment {
                     .show();
         }
     }
+
+    private void checkAndRequestMicrophonePermission() {
+        if (ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.RECORD_AUDIO)
+                == PackageManager.PERMISSION_GRANTED) {
+            // Permission already granted
+            startVoiceInput();
+        } else if (ActivityCompat.shouldShowRequestPermissionRationale(requireActivity(), android.Manifest.permission.RECORD_AUDIO)) {
+            // Explain to the user why the permission is needed
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("Microphone Permission Needed")
+                    .setMessage("This app requires microphone access to recognize your voice.")
+                    .setPositiveButton("Grant Permission", (dialog, which) -> {
+                        requestMicrophonePermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO);
+                    })
+                    .setNegativeButton("Cancel", (dialog, which) -> {
+                        dialog.dismiss();
+                    })
+                    .show();
+        } else {
+            // Permission denied with "Don't Ask Again" or other reason
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("Permission Denied")
+                    .setMessage("Microphone permission is required for voice recognition. Please enable it in the app settings.")
+                    .setPositiveButton("Open Settings", (dialog, which) -> {
+                        // Open app settings
+                        Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                        Uri uri = Uri.fromParts("package", requireContext().getPackageName(), null);
+                        intent.setData(uri);
+                        startActivity(intent);
+                    })
+                    .setNegativeButton("Cancel", (dialog, which) -> {
+                        dialog.dismiss();
+                    })
+                    .show();
+        }
+    }
+
+
+
 
     private void openQRCodeScanner() {
         ArrayList<String> validLocations = new ArrayList<>(locationSuggestions);
