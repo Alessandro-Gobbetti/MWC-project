@@ -1,5 +1,6 @@
 package com.example.usimaps;
 
+import android.Manifest;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -19,6 +20,7 @@ import androidx.camera.core.ImageProxy;
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 
@@ -34,6 +36,16 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
+/**
+ * QRCodeScannerDialogFragment is a {@link DialogFragment} used for scanning QR codes and validating
+ * them against a set of valid locations. This fragment utilizes CameraX and ML Kit for barcode
+ * scanning and analysis.
+ *
+ * The fragment displays a full-screen dialog with a camera preview. When a QR code is scanned,
+ * it checks whether the scanned value matches one of the provided valid locations. If valid, the
+ * result is passed back to the parent fragment using the Fragment Result API. If invalid,
+ * the fragment continues scanning and notifies the user.
+ */
 public class QRCodeScannerDialogFragment extends DialogFragment {
 
     private PreviewView previewView;
@@ -42,7 +54,12 @@ public class QRCodeScannerDialogFragment extends DialogFragment {
     private Set<String> validLocations;
     private String lastInvalidScannedValue = null;
 
-    // Static
+    /**
+     * Creates a new instance of {@link QRCodeScannerDialogFragment}.
+     *
+     * @param validLocations A list of valid location strings against which the scanned QR code is validated.
+     * @return A new instance of {@link QRCodeScannerDialogFragment}.
+     */
     public static QRCodeScannerDialogFragment newInstance(ArrayList<String> validLocations) {
         QRCodeScannerDialogFragment fragment = new QRCodeScannerDialogFragment();
         Bundle args = new Bundle();
@@ -78,14 +95,6 @@ public class QRCodeScannerDialogFragment extends DialogFragment {
 
         previewView = view.findViewById(R.id.previewView);
 
-//        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
-//                != PackageManager.PERMISSION_GRANTED) {
-//            requestPermissions(new String[]{Manifest.permission.CAMERA}, REQUEST_CAMERA_PERMISSION);
-//        } else {
-//            initBarcodeScanner();
-//            startCamera();
-//        }
-
         initBarcodeScanner();
         startCamera();
 
@@ -95,12 +104,18 @@ public class QRCodeScannerDialogFragment extends DialogFragment {
         return view;
     }
 
+    /**
+     * Initializes the barcode scanner using ML Kit. Configures the scanner to recognize QR codes.
+     */
     private void initBarcodeScanner() {
         BarcodeScannerOptions options = new BarcodeScannerOptions.Builder()
                 .setBarcodeFormats(Barcode.FORMAT_QR_CODE).build();
         barcodeScanner = BarcodeScanning.getClient(options);
     }
 
+    /**
+     * Starts the camera and binds the preview and image analysis to the lifecycle of this fragment.
+     */
     private void startCamera() {
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext());
 
@@ -126,6 +141,12 @@ public class QRCodeScannerDialogFragment extends DialogFragment {
         }, ContextCompat.getMainExecutor(requireContext()));
     }
 
+    /**
+     * Processes the captured image for QR code scanning. Validates the scanned value against
+     * the provided list of valid locations.
+     *
+     * @param image The {@link ImageProxy} object containing the image data.
+     */
     private void processImageForQRCode(ImageProxy image) {
         try {
             @SuppressWarnings("UnsafeOptInUsageError")

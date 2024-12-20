@@ -26,24 +26,81 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.io.File;
 import java.util.concurrent.ExecutionException;
 
+/**
+ * The ImageCaptureManager class manages camera functionality, including starting the camera,
+ * capturing photos, and storing metadata such as location and direction. It uses CameraX for
+ * camera operations and Google's Fused Location API for retrieving GPS coordinates.
+ */
 public class ImageCaptureManager {
+
+    /**
+     * The context in which this manager operates.
+     */
     private final Context context;
+
+    /**
+     * The LifecycleOwner associated with the camera operations.
+     */
     private final LifecycleOwner lifecycleOwner;
+
+    /**
+     * The PreviewView used for displaying the camera preview.
+     */
     private final PreviewView previewView;
+
+    /**
+     * Manages direction sensing to retrieve azimuth values.
+     */
     private final DirectionManager directionManager;
+
+    /**
+     * Client used for retrieving the user's current location.
+     */
     private final FusedLocationProviderClient fusedLocationClient;
 
+    /**
+     * Handles capturing images.
+     */
     private ImageCapture imageCapture;
+
+    /**
+     * The ProcessCameraProvider that binds camera use cases to the lifecycle.
+     */
     private ProcessCameraProvider cameraProvider;
 
+    /**
+     * Listener interface for image capture events.
+     */
     public interface ImageCaptureListener {
+        /**
+         * Called when an image is successfully captured.
+         *
+         * @param imagePath  The file path where the image is saved.
+         * @param latitude   The latitude where the image was taken.
+         * @param longitude  The longitude where the image was taken.
+         * @param direction  The azimuth direction when the image was taken.
+         * @param timestamp  The timestamp of the image capture.
+         */
         void onImageCaptured(String imagePath, double latitude, double longitude,
                              float direction, long timestamp);
+
+        /**
+         * Called when an error occurs during image capture.
+         *
+         * @param exception The exception describing the error.
+         */
         void onError(Exception exception);
     }
 
     private ImageCaptureListener imageCaptureListener;
 
+    /**
+     * Constructs a new ImageCaptureManager instance.
+     *
+     * @param context       The context in which the manager operates.
+     * @param lifecycleOwner The lifecycle owner associated with camera operations.
+     * @param previewView   The PreviewView used for displaying the camera preview.
+     */
     public ImageCaptureManager(Context context, LifecycleOwner lifecycleOwner, PreviewView previewView) {
         this.context = context;
         this.lifecycleOwner = lifecycleOwner;
@@ -52,7 +109,9 @@ public class ImageCaptureManager {
         this.fusedLocationClient = LocationServices.getFusedLocationProviderClient(context);
     }
 
-    // Initialize and start the camera
+    /**
+     * Starts the camera and binds it to the lifecycle.
+     */
     public void startCamera() {
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(context);
 
@@ -75,7 +134,9 @@ public class ImageCaptureManager {
         }, ContextCompat.getMainExecutor(context));
     }
 
-    // Method to capture image
+    /**
+     * Captures an image and saves it to the local file system.
+     */
     public void takePhoto() {
         if (imageCapture == null) return;
 
@@ -116,7 +177,11 @@ public class ImageCaptureManager {
         });
     }
 
-    // Get current location
+    /**
+     * Retrieves the current location using the Fused Location API.
+     *
+     * @param listener A listener that receives the retrieved location or null if unavailable.
+     */
     private void getCurrentLocation(OnLocationRetrievedListener listener) {
         if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -129,11 +194,22 @@ public class ImageCaptureManager {
                 .addOnFailureListener(e -> listener.onLocationRetrieved(null));
     }
 
+    /**
+     * Interface for listening to location retrieval events.
+     */
     private interface OnLocationRetrievedListener {
         void onLocationRetrieved(Location location);
     }
 
-    // Save image metadata to database
+    /**
+     * Saves image metadata to the local database.
+     *
+     * @param imagePath  The file path of the captured image.
+     * @param latitude   The latitude where the image was taken.
+     * @param longitude  The longitude where the image was taken.
+     * @param direction  The azimuth direction when the image was taken.
+     * @param timestamp  The timestamp of the image capture.
+     */
     private void saveImageMetadata(String imagePath, double latitude, double longitude, float direction, long timestamp) {
         DatabaseHelper dbHelper = new DatabaseHelper(context);
         SQLiteDatabase db = dbHelper.getWritableDatabase();
@@ -154,21 +230,32 @@ public class ImageCaptureManager {
         db.close();
     }
 
-    // Set the image capture listener
+    /**
+     * Sets a listener for image capture events.
+     *
+     * @param listener The listener to be notified of capture events.
+     */
     public void setImageCaptureListener(ImageCaptureListener listener) {
         this.imageCaptureListener = listener;
     }
 
-    // Start and stop direction manager
+    /**
+     * Starts the direction manager to listen for direction changes.
+     */
     public void startListeningToDirection() {
         directionManager.startListening();
     }
 
+    /**
+     * Stops the direction manager from listening for direction changes.
+     */
     public void stopListeningToDirection() {
         directionManager.stopListening();
     }
 
-    // Cleanup method
+    /**
+     * Cleans up resources, such as unbinding the camera provider.
+     */
     public void shutdown() {
         if (cameraProvider != null) {
             cameraProvider.unbindAll();

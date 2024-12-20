@@ -3,8 +3,10 @@ package com.example.usimaps.ui.gallery;
 import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -16,6 +18,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
@@ -100,9 +106,22 @@ public class GalleryFragment extends Fragment {
 
     private String llmprompt;
 
+    private static final int CAMERA_PERMISSION_REQUEST_CODE = 100;
+
+    private ActivityResultLauncher<String> requestCameraPermissionLauncher;
+
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        requestCameraPermissionLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+            if (isGranted) {
+                openQRCodeScanner();
+            } else {
+                Toast.makeText(requireContext(), "Camera permission is required to scan QR codes.", Toast.LENGTH_SHORT).show();
+            }
+        });
 
         textToSpeech = new TextToSpeech(requireContext(), new TextToSpeech.OnInitListener() {
             @Override
@@ -322,7 +341,7 @@ public class GalleryFragment extends Fragment {
         //listener for QR code button inside the "from" search bar
         fromSearchBar.setOnMenuItemClickListener(item -> {
             if (item.getItemId() == R.id.action_qr_scan) {
-                openQRCodeScanner();
+                checkAndRequestCameraPermission();
                 return true;
             } else if (item.getItemId() == R.id.action_voice_input) {
                 Toast.makeText(requireContext(), "Mic clicked!", Toast.LENGTH_SHORT).show();
@@ -388,6 +407,42 @@ public class GalleryFragment extends Fragment {
                 });
         listeningDialog = builder.create();
         listeningDialog.show();
+    }
+
+    private void checkAndRequestCameraPermission() {
+        if (ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED) {
+            // Permission already granted
+            openQRCodeScanner();
+        } else if (ActivityCompat.shouldShowRequestPermissionRationale(requireActivity(), android.Manifest.permission.CAMERA)) {
+            // Explain to the user why the permission is needed
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("Camera Permission Needed")
+                    .setMessage("This app requires camera access to scan QR codes.")
+                    .setPositiveButton("Grant Permission", (dialog, which) -> {
+                        requestCameraPermissionLauncher.launch(android.Manifest.permission.CAMERA);
+                    })
+                    .setNegativeButton("Cancel", (dialog, which) -> {
+                        dialog.dismiss();
+                    })
+                    .show();
+        } else {
+            // Permission denied with "Don't Ask Again" or other reason
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("Permission Denied")
+                    .setMessage("Camera permission is required to scan QR codes. Please enable it in the app settings.")
+                    .setPositiveButton("Open Settings", (dialog, which) -> {
+                        // Open app settings
+                        Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                        Uri uri = Uri.fromParts("package", requireContext().getPackageName(), null);
+                        intent.setData(uri);
+                        startActivity(intent);
+                    })
+                    .setNegativeButton("Cancel", (dialog, which) -> {
+                        dialog.dismiss();
+                    })
+                    .show();
+        }
     }
 
     private void openQRCodeScanner() {
