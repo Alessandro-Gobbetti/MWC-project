@@ -24,6 +24,11 @@ public class InstructionCardFragment extends Fragment {
     // image paths array
     private final String imgPath;
 
+    public InstructionCardFragment() {
+        this.instruction = "";
+        this.imgPath = "";
+    }
+
     public InstructionCardFragment(String instruction, String imgPath) {
         this.instruction = instruction;
         this.imgPath = imgPath;

@@ -98,7 +98,6 @@
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/NavRouteTabLayout"
-        style="@style/RoundedTabLayoutStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="-80dp"
@@ -149,12 +148,6 @@
         app:layout_constraintTop_toBottomOf="@id/NavRouteTabLayout"
         tools:layout_editor_absoluteX="0dp" />
 
-
-<!--    <include layout="@layout/fragment_route_list" android:id="@+id/route_list2"/>-->
-<!--    <include layout="@layout/fragment_navigation_cards" android:id="@+id/navigation_cards2"/>-->
-
-
-    <!-- Empty Route text -->
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

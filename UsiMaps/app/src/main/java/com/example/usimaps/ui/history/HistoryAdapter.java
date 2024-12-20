@@ -1,22 +1,17 @@
-package com.example.usimaps;
+package com.example.usimaps.ui.history;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ImageView;
 import android.widget.TextView;
 
-import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.usimaps.map.Vertex;
-import com.example.usimaps.map.VertexType;
+import com.example.usimaps.R;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import kotlin.Pair;
 import kotlin.Triple;
 
 public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHolder>{

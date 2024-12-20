@@ -50,7 +50,7 @@ public class HistoryFragment extends Fragment {
         RouteHistoryListFragment routeHistoryListFragment = new RouteHistoryListFragment(history);
         FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
         transaction.replace(binding.historyContainer.getId(), routeHistoryListFragment);
-        transaction.commit();
+        transaction.commitAllowingStateLoss();
 
         if (!history.isEmpty()) {
             // mark the missing history text view as gone

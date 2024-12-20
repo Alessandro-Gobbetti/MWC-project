@@ -25,6 +25,14 @@ public class NavRouteAdapter extends FragmentStateAdapter {
         }
     }
 
+    public void setRouteListFragment(RouteListFragment routeListFragment) {
+        this.routeListFragment = routeListFragment;
+    }
+
+    public void setNavigationCardsFragment(NavigationCardsFragment navigationCardsFragment) {
+        this.navigationCardsFragment = navigationCardsFragment;
+    }
+
     @Override
     public int getItemCount() {
         return 2;

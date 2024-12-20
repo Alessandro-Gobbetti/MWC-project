@@ -1,4 +1,4 @@
-package com.example.usimaps;
+package com.example.usimaps.ui.navigate;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,6 +9,7 @@ import android.widget.TextView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.usimaps.R;
 import com.example.usimaps.map.Vertex;
 import com.example.usimaps.map.VertexType;
 
@@ -98,6 +99,10 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         path = newPath;
         instructions = newInstructions;
         notifyDataSetChanged();
+    }
+
+    public List<Vertex> getPath() {
+        return path;
     }
 
 }

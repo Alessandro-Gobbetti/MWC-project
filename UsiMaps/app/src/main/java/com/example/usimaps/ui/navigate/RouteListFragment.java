@@ -12,7 +12,6 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.usimaps.R;
-import com.example.usimaps.RecyclerViewAdapter;
 import com.example.usimaps.databinding.FragmentRouteListBinding;
 import com.example.usimaps.map.Vertex;
 

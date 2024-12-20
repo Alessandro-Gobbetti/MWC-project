@@ -11,7 +11,6 @@ import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.usimaps.HistoryAdapter;
 import com.example.usimaps.R;
 import com.example.usimaps.databinding.FragmentHistoryListBinding;
 

@@ -13,7 +13,6 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.example.usimaps.R;
-import com.example.usimaps.ViewPagerAdapter;
 import com.example.usimaps.databinding.FragmentNavigationCardsBinding;
 import com.example.usimaps.map.Vertex;
 import com.google.android.material.tabs.TabLayout;

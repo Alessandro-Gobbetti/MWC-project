@@ -4,8 +4,8 @@
         <item name="tabBackground">@drawable/tabs_selector</item>
         <item name="tabIndicator">@null</item>
         <item name="android:background">@drawable/tab_layout_bg</item>
-        <item name="tabSelectedTextColor">@color/white</item>
-        <item name="tabTextColor">@color/purple_500</item>
+        <item name="tabSelectedTextColor">?attr/colorPrimaryInverse</item>
+        <item name="tabTextColor">?attr/colorPrimary</item>
     </style>
 
 </resources>
