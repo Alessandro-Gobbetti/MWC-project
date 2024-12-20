@@ -6,7 +6,7 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 
 import com.example.usimaps.map.Vertex;
-import com.example.usimaps.ui.gallery.InstructionCardFragment;
+import com.example.usimaps.ui.navigate.InstructionCardFragment;
 
 import java.util.ArrayList;
 import java.util.List;

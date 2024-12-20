@@ -1,4 +1,4 @@
-package com.example.usimaps.ui.gallery;
+package com.example.usimaps.ui.navigate;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -9,7 +9,7 @@ public class NavRouteAdapter extends FragmentStateAdapter {
     private RouteListFragment routeListFragment;
     private NavigationCardsFragment navigationCardsFragment;
 
-    public NavRouteAdapter(GalleryFragment fragmentActivity) {
+    public NavRouteAdapter(NavigateFragment fragmentActivity) {
         super(fragmentActivity);
         this.routeListFragment = new RouteListFragment();
         this.navigationCardsFragment = new NavigationCardsFragment();

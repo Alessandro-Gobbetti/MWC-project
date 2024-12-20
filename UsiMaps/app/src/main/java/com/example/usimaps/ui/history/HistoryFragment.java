@@ -1,4 +1,4 @@
-package com.example.usimaps.ui.slideshow;
+package com.example.usimaps.ui.history;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -10,7 +10,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -20,16 +19,12 @@ import androidx.lifecycle.ViewModelProvider;
 import com.example.usimaps.DatabaseHelper;
 import com.example.usimaps.databinding.FragmentSlideshowBinding;
 
-import org.w3c.dom.Text;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
-import kotlin.Pair;
 import kotlin.Triple;
 
-public class SlideshowFragment extends Fragment {
+public class HistoryFragment extends Fragment {
 
     private FragmentSlideshowBinding binding;
 
@@ -39,8 +34,8 @@ public class SlideshowFragment extends Fragment {
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        SlideshowViewModel slideshowViewModel =
-                new ViewModelProvider(this).get(SlideshowViewModel.class);
+        HistoryViewModel historyViewModel =
+                new ViewModelProvider(this).get(HistoryViewModel.class);
 
         binding = FragmentSlideshowBinding.inflate(inflater, container, false);
         View root = binding.getRoot();

@@ -1,4 +1,4 @@
-package com.example.usimaps.ui.gallery;
+package com.example.usimaps.ui.navigate;
 
 import android.os.Bundle;
 

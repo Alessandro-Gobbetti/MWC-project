@@ -1,4 +1,4 @@
-package com.example.usimaps.ui.home;
+package com.example.usimaps.ui.edit;
 
 import android.net.Uri;
 import android.os.Bundle;
@@ -19,12 +19,9 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.camera.view.PreviewView;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.usimaps.DatabaseHelper;
 import com.example.usimaps.ImageCaptureManager;
-import com.example.usimaps.LocationAdapter;
 import com.example.usimaps.databinding.FragmentHomeBinding;
 import com.example.usimaps.map.Graph;
 import com.example.usimaps.map.Vertex;
@@ -32,17 +29,13 @@ import com.example.usimaps.map.VertexType;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
-import com.google.android.material.search.SearchBar;
-import com.google.android.material.search.SearchView;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 import com.google.android.material.textfield.TextInputEditText;
-
-import com.example.usimaps.BuildConfig;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class HomeFragment extends Fragment {
+public class EditFragment extends Fragment {
 
     private FragmentHomeBinding binding;
 
@@ -201,8 +194,8 @@ public class HomeFragment extends Fragment {
                 selectedImageView.setVisibility(View.VISIBLE);
 
                 // Save the GPS coordinates
-                HomeFragment.this.latitude = latitude;
-                HomeFragment.this.longitude = longitude;
+                EditFragment.this.latitude = latitude;
+                EditFragment.this.longitude = longitude;
 
             }
 

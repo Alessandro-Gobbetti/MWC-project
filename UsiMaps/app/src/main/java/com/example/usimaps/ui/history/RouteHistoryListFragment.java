@@ -1,6 +1,5 @@
-package com.example.usimaps.ui.slideshow;
+package com.example.usimaps.ui.history;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,16 +13,11 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.usimaps.HistoryAdapter;
 import com.example.usimaps.R;
-import com.example.usimaps.RecyclerViewAdapter;
 import com.example.usimaps.databinding.FragmentHistoryListBinding;
-import com.example.usimaps.databinding.FragmentRouteListBinding;
-import com.example.usimaps.map.Vertex;
-import com.example.usimaps.ui.gallery.GalleryFragment;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import kotlin.Pair;
 import kotlin.Triple;
 
 /**
@@ -58,7 +52,7 @@ public class RouteHistoryListFragment extends Fragment {
             Bundle bundle = new Bundle();
             bundle.putString("start", item.getSecond());
             bundle.putString("goal", item.getThird());
-            Navigation.findNavController(root).navigate(R.id.action_slideshow_to_gallery, bundle);
+            Navigation.findNavController(root).navigate(R.id.action_history_to_navigate, bundle);
         });
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         recyclerView.setAdapter(adapter);

@@ -1,7 +1,5 @@
-package com.example.usimaps.ui.gallery;
+package com.example.usimaps.ui.navigate;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 
@@ -14,7 +12,6 @@ import android.view.ViewGroup;
 
 import com.example.usimaps.R;
 import com.example.usimaps.databinding.FragmentInstructionCardBinding;
-import com.example.usimaps.map.VertexType;
 
 import java.io.File;
 

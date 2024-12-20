@@ -1,4 +1,4 @@
-package com.example.usimaps.ui.gallery;
+package com.example.usimaps.ui.navigate;
 
 import android.app.AlertDialog;
 import android.content.ContentValues;
@@ -26,7 +26,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
-import android.widget.Button;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -36,8 +35,6 @@ import com.example.usimaps.BuildConfig;
 import com.example.usimaps.DatabaseHelper;
 import com.example.usimaps.QRCodeScannerDialogFragment;
 import com.example.usimaps.R;
-import com.example.usimaps.RecyclerViewAdapter;
-import com.example.usimaps.ViewPagerAdapter;
 import com.example.usimaps.databinding.FragmentGalleryBinding;
 
 //import graph class from the map package
@@ -58,25 +55,19 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.widget.Toast;
 
-import org.reactivestreams.Publisher;
-
-import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeoutException;
 
 import kotlin.Pair;
 
-public class GalleryFragment extends Fragment {
+public class NavigateFragment extends Fragment {
 
     private FragmentGalleryBinding binding;
 
@@ -253,8 +244,8 @@ public class GalleryFragment extends Fragment {
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        GalleryViewModel galleryViewModel =
-                new ViewModelProvider(this).get(GalleryViewModel.class);
+        NavigateViewModel navigateViewModel =
+                new ViewModelProvider(this).get(NavigateViewModel.class);
 
         binding = FragmentGalleryBinding.inflate(inflater, container, false);
         View root = binding.getRoot();

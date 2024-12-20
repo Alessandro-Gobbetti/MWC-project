@@ -8,25 +8,25 @@
 
     <fragment
         android:id="@+id/nav_home"
-        android:name="com.example.usimaps.ui.home.HomeFragment"
+        android:name="com.example.usimaps.ui.edit.EditFragment"
         android:label="Edit"
         tools:layout="@layout/fragment_home" >
     </fragment>
 
     <fragment
         android:id="@+id/nav_gallery"
-        android:name="com.example.usimaps.ui.gallery.GalleryFragment"
+        android:name="com.example.usimaps.ui.navigate.NavigateFragment"
         android:label="Navigate"
         tools:layout="@layout/fragment_gallery" >
     </fragment>
 
     <fragment
         android:id="@+id/nav_slideshow"
-        android:name="com.example.usimaps.ui.slideshow.SlideshowFragment"
+        android:name="com.example.usimaps.ui.history.HistoryFragment"
         android:label="History"
         tools:layout="@layout/fragment_slideshow">
         <action
-            android:id="@+id/action_slideshow_to_gallery"
+            android:id="@+id/action_history_to_navigate"
             app:destination="@id/nav_gallery"
             app:popUpTo="@id/nav_graph"
             app:popUpToInclusive="true"/>

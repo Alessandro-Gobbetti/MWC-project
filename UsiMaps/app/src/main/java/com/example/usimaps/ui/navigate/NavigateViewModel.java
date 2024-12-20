@@ -1,14 +1,14 @@
-package com.example.usimaps.ui.gallery;
+package com.example.usimaps.ui.navigate;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-public class GalleryViewModel extends ViewModel {
+public class NavigateViewModel extends ViewModel {
 
     private final MutableLiveData<String> mText;
 
-    public GalleryViewModel() {
+    public NavigateViewModel() {
         mText = new MutableLiveData<>();
         mText.setValue("This is gallery fragment");
     }
