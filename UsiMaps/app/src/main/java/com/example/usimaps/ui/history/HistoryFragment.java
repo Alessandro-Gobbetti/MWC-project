@@ -17,7 +17,7 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.usimaps.DatabaseHelper;
-import com.example.usimaps.databinding.FragmentSlideshowBinding;
+import com.example.usimaps.databinding.FragmentHistoryBinding;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +26,7 @@ import kotlin.Triple;
 
 public class HistoryFragment extends Fragment {
 
-    private FragmentSlideshowBinding binding;
+    private FragmentHistoryBinding binding;
 
     private Button ttsButton;
 
@@ -37,7 +37,7 @@ public class HistoryFragment extends Fragment {
         HistoryViewModel historyViewModel =
                 new ViewModelProvider(this).get(HistoryViewModel.class);
 
-        binding = FragmentSlideshowBinding.inflate(inflater, container, false);
+        binding = FragmentHistoryBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
 

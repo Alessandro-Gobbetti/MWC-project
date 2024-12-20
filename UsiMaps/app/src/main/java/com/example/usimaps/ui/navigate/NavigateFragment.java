@@ -35,7 +35,7 @@ import com.example.usimaps.BuildConfig;
 import com.example.usimaps.DatabaseHelper;
 import com.example.usimaps.QRCodeScannerDialogFragment;
 import com.example.usimaps.R;
-import com.example.usimaps.databinding.FragmentGalleryBinding;
+import com.example.usimaps.databinding.FragmentNavigateBinding;
 
 //import graph class from the map package
 import com.example.usimaps.map.Graph;
@@ -69,7 +69,7 @@ import kotlin.Pair;
 
 public class NavigateFragment extends Fragment {
 
-    private FragmentGalleryBinding binding;
+    private FragmentNavigateBinding binding;
 
     private ViewPager2 viewPager;
 
@@ -247,7 +247,7 @@ public class NavigateFragment extends Fragment {
         NavigateViewModel navigateViewModel =
                 new ViewModelProvider(this).get(NavigateViewModel.class);
 
-        binding = FragmentGalleryBinding.inflate(inflater, container, false);
+        binding = FragmentNavigateBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
 //        byte[] bytegraph = Graph.serialize(graph);

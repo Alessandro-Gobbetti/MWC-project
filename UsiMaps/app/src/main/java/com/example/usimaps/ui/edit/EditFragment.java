@@ -22,7 +22,7 @@ import androidx.fragment.app.Fragment;
 
 import com.example.usimaps.DatabaseHelper;
 import com.example.usimaps.ImageCaptureManager;
-import com.example.usimaps.databinding.FragmentHomeBinding;
+import com.example.usimaps.databinding.FragmentEditBinding;
 import com.example.usimaps.map.Graph;
 import com.example.usimaps.map.Vertex;
 import com.example.usimaps.map.VertexType;
@@ -37,7 +37,7 @@ import java.util.List;
 
 public class EditFragment extends Fragment {
 
-    private FragmentHomeBinding binding;
+    private FragmentEditBinding binding;
 
     //Fields needed for camera
     private PreviewView previewView;
@@ -77,7 +77,7 @@ public class EditFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
 
-        binding = FragmentHomeBinding.inflate(inflater, container, false);
+        binding = FragmentEditBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
         graph = graph.generateUSIMap();
@@ -197,11 +197,14 @@ public class EditFragment extends Fragment {
                 EditFragment.this.latitude = latitude;
                 EditFragment.this.longitude = longitude;
 
+                // Stop the camera
+                imageCaptureManager.shutdown();
             }
 
             @Override
             public void onError(Exception exception) {
                 Toast.makeText(requireContext(), "Failed to save photo: " + exception.getMessage(), Toast.LENGTH_SHORT).show();
+                imageCaptureManager.shutdown();
             }
         });
 
@@ -224,7 +227,7 @@ public class EditFragment extends Fragment {
             binding.cameraContainer.setVisibility(View.VISIBLE);
 
             // Start the camera
-//            imageCaptureManager.startCamera();
+            imageCaptureManager.startCamera();
         });
 
         // Handle returning to form
@@ -234,14 +237,13 @@ public class EditFragment extends Fragment {
             binding.formContainer.setVisibility(View.VISIBLE);
 
             // Stop the camera
-//            imageCaptureManager.shutdown();
+            imageCaptureManager.shutdown();
         });
 
         buttonSubmitForm.setOnClickListener(v -> submitForm());
 
         binding.imageCaptureButton.setOnClickListener(v -> {
             imageCaptureManager.takePhoto();
-//            imageCaptureManager.shutdown();
         });
 
         return root;
@@ -360,7 +362,7 @@ public class EditFragment extends Fragment {
         super.onResume();
         // Start listening for sensor updates
         imageCaptureManager.startListeningToDirection();
-        imageCaptureManager.startCamera();
+//        imageCaptureManager.startCamera();
     }
 
     @Override
@@ -369,7 +371,7 @@ public class EditFragment extends Fragment {
         // Stop listening for sensor updates to save battery
         imageCaptureManager.stopListeningToDirection();
         // Re-initialize the camera
-        imageCaptureManager.shutdown();
+//        imageCaptureManager.shutdown();
     }
 
     @Override
