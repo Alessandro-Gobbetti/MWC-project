@@ -2,8 +2,11 @@ package com.example.usimaps.map;
 
 import java.io.Serializable;
 
+/**
+ * Vertex class
+ */
 public class Vertex implements Serializable {
-
+    // Vertex attributes
     private String name;
     private VertexType type;
     private double latitude;
@@ -11,20 +14,32 @@ public class Vertex implements Serializable {
     private int floor;
     private String imagepath;
 
+    /**
+     * Constructor
+     * @param name Name
+     * @param type Type
+     * @param latitude Latitude
+     * @param longitude Longitude
+     * @param floor Floor
+     */
     public Vertex(String name, VertexType type, double latitude, double longitude, int floor) {
         this.name = name;
         this.type = type;
         this.latitude = latitude;
         this.longitude = longitude;
         this.floor = floor;
-
-        // image paths array
-        String[] images = new String[] {"/storage/emulated/0/Android/data/com.example.usimaps/files/Pictures/IMG_1732881224591.jpg", "/storage/emulated/0/Android/data/com.example.usimaps/files/Pictures/IMG_1732881794105.jpg","/storage/emulated/0/Android/data/com.example.usimaps/files/Pictures/IMG_1732881831511.jpg"};
-        int random = (int) (Math.random() * images.length);
-        this.imagepath = images[random];
-
+        this.imagepath = "";
     }
 
+    /**
+     * Constructor
+     * @param name Name
+     * @param type Type
+     * @param latitude Latitude
+     * @param longitude Longitude
+     * @param floor Floor
+     * @param imagepath Image path
+     */
     public Vertex(String name, VertexType type, double latitude, double longitude, int floor, String imagepath) {
         this.name = name;
         this.type = type;
@@ -34,6 +49,7 @@ public class Vertex implements Serializable {
         this.imagepath = imagepath;
     }
 
+    // Getters and setters
     public String getName() {
         return name;
     }

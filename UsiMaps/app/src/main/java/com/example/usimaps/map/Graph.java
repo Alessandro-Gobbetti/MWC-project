@@ -43,11 +43,18 @@ public class Graph implements Serializable {
         this.map = new HashMap<>();
     }
 
+    /**
+     * Constructor for Graph
+     * @param mapName the name of the map
+     */
     public Graph(String mapName) {
         this.map = new HashMap<>();
         this.mapName = mapName;
     }
 
+    /**
+     * get the map name
+     */
     public String getMapName() {
         return mapName;
     }
@@ -173,14 +180,10 @@ public class Graph implements Serializable {
      * @return the shortest path and the weight of the path
      */
     public Pair<List<Vertex>, Double> getShortestPath(final Vertex source, final Vertex destination) {
-         // create vertex priority queue
+        // create vertex priority queue
         Map<Vertex, Double> distance = new HashMap<>();
         Map<Vertex, Vertex> previous = new HashMap<>();
         PriorityQueue<Vertex> pq = new PriorityQueue<>(Comparator.comparingDouble(distance::get));
-        System.out.println("Source: " + source.getName() +  "Destination: " + destination.getName());
-        for (Vertex v : map.keySet()) {
-            System.out.println(v.getName());
-        }
 
         distance.put(source, 0.0);
         pq.add(source);
@@ -294,10 +297,6 @@ public class Graph implements Serializable {
         // create new edge from edge to vertex
         double weight = computeDistance(v, connectionVertex);
         addEdge(connectionVertex, v, weight, e.getName() + "-" + v.getName());
-
-        // remove old edge
-//        map.get(e.getSource()).remove(e);
-//        map.get(e.getDestination()).remove(e);
     }
 
     /**
@@ -352,8 +351,6 @@ public class Graph implements Serializable {
         connectVertexToEdge(v, closestEdge);
     }
 
-
-
     /**
      * Returns the angle between three vertices
      * @param v1: the first vertex
@@ -376,6 +373,13 @@ public class Graph implements Serializable {
         return Math.acos((a + b - c) / Math.sqrt(4 * a * b));
     }
 
+    /**
+     * Returns the signed angle between three vertices
+     * @param v1: the first vertex
+     * @param v2: the second vertex
+     * @param v3: the third vertex
+     * @return the signed angle between the three vertices
+     */
     public double getSignedAngle(Vertex v1, Vertex v2, Vertex v3) {
         double x1 = v1.getLongitude();
         double y1 = v1.getLatitude();
@@ -396,6 +400,12 @@ public class Graph implements Serializable {
         return angle;
     }
 
+    /**
+     * Computes the distance between two vertices given their latitude and longitude
+     * @param v1: the first vertex
+     * @param v2: the second vertex
+     * @return the distance between the two vertices
+     */
     public double computeDistance(Vertex v1, Vertex v2) {
         if (v1.getType() == VertexType.OUTSIDE || v2.getType() == VertexType.OUTSIDE) {
             return 0;
@@ -448,10 +458,20 @@ public class Graph implements Serializable {
         return simplifiedPath;
     }
 
+    /**
+     * Returns true if the angle is right
+     * @param angle the angle
+     * @return true if the angle is right
+     */
     private boolean isRight(final double angle) {
         return angle > 180 || angle < 0;
     }
 
+    /**
+     * Rounds the distance to the closest reasonable integer: useful for displaying distance in instructions
+     * @param distance the distance
+     * @return the rounded distance
+     */
     public int roundDistance(final double distance) {
         if (distance < 4) {
             // round to closest integer
@@ -504,7 +524,6 @@ public class Graph implements Serializable {
             Vertex v3 = path.get(i + 1);
             double angle = Math.toDegrees(getSignedAngle(v1, v2, v3));
             // check if stairs
-            System.out.println("ANALYZING: " + v1.getName() + " | " + v2.getName() + " | " + v3.getName() + " | " + angle);
 
             // skip vertices if distance is too small
             if (computeDistance(v2, v3) < 1.0) {
@@ -512,10 +531,8 @@ public class Graph implements Serializable {
             }
 
             if (v2.getType() != VertexType.STAIR && v3.getType() == VertexType.STAIR) {
-
                 // next vertex is a stair
                 while (i < path.size() - 2 && path.get(i+1).getType() == VertexType.STAIR) {
-                    System.out.println("Skipping stair: " + path.get(i+1).getName());
                     i++;
                 }
 
@@ -528,7 +545,6 @@ public class Graph implements Serializable {
             } else if (v2.getType() == VertexType.STAIR) {
                 // skip all next stairs
                 while (i < path.size() - 2 && path.get(i+1).getType() == VertexType.STAIR) {
-                    System.out.println("Skipping stair: " + path.get(i+1).getName());
                     i++;
                 }
                 int finalFloor = path.get(i).getFloor();
@@ -540,12 +556,10 @@ public class Graph implements Serializable {
                 double distance =  computeDistance(v2, v3);
                 int roundedDistance = roundDistance(distance);
                 instructions.add(getTurnPhrase("right", roundedDistance));
-//                instructions.add("Turn right and walk " + roundedDistance + " meters");
             } else {
                 double distance =  computeDistance(v2, v3);
                 int roundedDistance = roundDistance(distance);
                 instructions.add(getTurnPhrase("left", roundedDistance));
-//                instructions.add("Turn left and walk " + roundedDistance + " meters");
             }
 
             simplifiedPath.add(v2);
@@ -553,24 +567,10 @@ public class Graph implements Serializable {
                 // modify the instruction to include the door
                 instructions.set(instructions.size() - 1, instructions.get(instructions.size() - 1) + " through the door");
             }
-            System.out.println("->: " + instructions.get(instructions.size() - 1));
 
         }
         instructions.add("Destination: " + path.get(path.size() - 1).getName());
         simplifiedPath.add(path.get(path.size() - 1));
-
-        System.out.println("########### LENGTH: " + simplifiedPath.size() + " -> " + instructions.size());
-
-        // print all coordinates
-        System.out.println("||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
-        for (Vertex v : simplifiedPath) {
-            System.out.println(v.getName() + " " + v.getLatitude() + " " + v.getLongitude() + " " + v.getFloor() + " " + v.getType());
-        }
-
-        System.out.println("Distances: ");
-        for (int i = 0; i < simplifiedPath.size() - 1; i++) {
-            System.out.println(computeDistance(simplifiedPath.get(i), simplifiedPath.get(i + 1)));
-        }
 
         return new Pair<>(simplifiedPath, instructions);
     }
@@ -646,7 +646,6 @@ public class Graph implements Serializable {
         return Integer.parseInt(floor.substring(0, floor.length() - 2));
     }
 
-
     /**
      * Generates a map of the USI campus
      * @return the graph representing the USI campus
@@ -713,9 +712,11 @@ public class Graph implements Serializable {
         return graph;
     }
 
-
-
-
+    /**
+     * Load the graph from a file
+     * @param fileIn the file input stream
+     * @return the graph
+     */
     public static Graph loadGraph(FileInputStream fileIn) {
         try {
             ObjectInputStream objectIn = new ObjectInputStream(fileIn);
@@ -728,6 +729,12 @@ public class Graph implements Serializable {
         }
     }
 
+    /**
+     * Save the graph to a file
+     * @param fileout the file output stream
+     * @param graph the graph
+     * @return true if the graph was saved successfully
+     */
     public static boolean saveGraph(FileOutputStream fileout, Graph graph) {
         try {
             ObjectOutputStream objectOut = new ObjectOutputStream(fileout);
@@ -741,7 +748,11 @@ public class Graph implements Serializable {
         }
     }
 
-
+    /**
+     * Serialize a graph to a byte array
+     * @param graph the graph
+     * @return the byte array
+     */
     public static byte[] serialize(Graph graph) {
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -756,6 +767,11 @@ public class Graph implements Serializable {
         return null;
     }
 
+    /**
+     * Deserialize a graph from a byte array
+     * @param data the byte array
+     * @return the graph
+     */
     public static Graph deserialize(byte[] data) {
         try {
             ByteArrayInputStream baip = new ByteArrayInputStream(data);
